@@ -1,0 +1,55 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class JsonRef {
+    +replace_refs(config: Mapping, loader: Callable): Mapping
+}
+
+class ConfigMate{
+    session: Session
+    handlers: dict[ContentType | str, StreamHandler]
+
+    +mount_session(scheme: str, adapter: BaseAdapter)
+    +mount_handler(content_type: ContentType | str, handler: StreamHandler)
+    +load_config_from_dict(config_dict: Mapping, base_uri: str = ''): Mapping
+    +load_config_from_stream(config_stream: TextIO, content_type: ContentType | str = YAML, base_uri: str = ''): Mapping or list
+    +load_config_from_content(config_content: str, content_type: ContentType = YAML, base_uri: str = ''): Mapping or list
+    +load_config_from_location(config_location: str): Mapping or list
+    +dump_config(configuration: Mapping or list, stream: TextIO, content_type: ContentType = YAML)
+}
+
+ConfigMate -u--> FileAdapter
+ConfigMate -u--> OCIAdapter
+ConfigMate -u--> S3Adapter
+ConfigMate -u--> HTTPAdapter
+ConfigMate -l-> JsonRef
+ConfigMate -d-> ContentType
+
+package "handlers" {
+    abstract class StreamHandler {
+        {abstract} +handle(stream: TextIO): Mapping or list
+        {abstract} +write(configuration: Mapping or list, stream: TextIO)
+    }
+
+    class JsonHandler extends StreamHandler {
+        +handle(stream: TextIO): Mapping or list
+        +write(configuration: Mapping or list, stream: TextIO)
+    }
+
+    class XmlHandler extends StreamHandler {
+        +handle(stream: TextIO): Mapping or list
+        +write(configuration: Mapping or list, stream: TextIO)
+    }
+
+    class YamlHandler extends StreamHandler {
+        +handle(stream: TextIO): Mapping or list
+        +write(configuration: Mapping or list, stream: TextIO)
+    }
+}
+
+ConfigMate -r-> StreamHandler
+ConfigMate -r-> JsonHandler
+ConfigMate -r-> XmlHandler
+ConfigMate -r-> YamlHandler
+
+@enduml

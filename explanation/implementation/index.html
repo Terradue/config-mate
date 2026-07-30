@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Fabrice Brito, Simone Tripodi" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>How the implementation is organized - Config Mate</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../styles/css/app.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "How the implementation is organized";
+        var mkdocs_page_input_path = "explanation/implementation.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../..">
+          <img src="../../imgs/icon-eoap.png" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Tutorials</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../tutorials/first-bundle/">Bundle your first configuration</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">How-to guides</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/modular-configuration/">Build a modular configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/playground/">Use the playground</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Reference</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../reference/cli/">CLI</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../reference/json-reference/">JSON Reference ($ref)</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Explanation</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../modular-configuration/">Why modular configuration?</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">How the implementation is organized</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#package-layout">Package layout</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#class-diagram">Class diagram</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#the-loading-pipeline">The loading pipeline</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#transport-adapters">Transport adapters</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#serialization-handlers">Serialization handlers</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#entrypoints">Entrypoints</a>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Config Mate</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Explanation</li>
+      <li class="breadcrumb-item active">How the implementation is organized</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="how-the-implementation-is-organized">How the implementation is organized</h1>
+<p>Config Mate separates configuration transport, serialization, and reference
+resolution. The <code>ConfigMate</code> class coordinates these responsibilities without
+embedding the details of every URI scheme or document format.</p>
+<h2 id="package-layout">Package layout</h2>
+<p>The implementation is deliberately small:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-0-1">src/config_mate/
+</span><span id="__span-0-2">├── __init__.py
+</span><span id="__span-0-3">├── main.py
+</span><span id="__span-0-4">└── handlers/
+</span><span id="__span-0-5">    ├── __init__.py
+</span><span id="__span-0-6">    ├── json_handler.py
+</span><span id="__span-0-7">    ├── xml_handler.py
+</span><span id="__span-0-8">    └── yaml_handler.py
+</span></code></pre></div>
+<ul>
+<li><code>config_mate.__init__</code> defines the <code>ConfigMate</code> facade and the load,
+  resolution, and dump pipeline.</li>
+<li><code>config_mate.main</code> defines the Click command, configures transport adapters,
+  and directs output to a file or standard output.</li>
+<li><code>config_mate.handlers</code> defines the serialization abstraction and the
+  built-in JSON, YAML, and XML implementations.</li>
+<li><code>session-adapters</code> supplies the file, S3, OCI, and authenticated HTTP
+  transport adapters used by the CLI.</li>
+<li><code>jsonref</code> performs recursive JSON Reference resolution.</li>
+</ul>
+<p>The playground is a separate Streamlit consumer of the public <code>ConfigMate</code>
+API. It is not part of the loading core.</p>
+<h2 id="class-diagram">Class diagram</h2>
+<p>The diagram shows the core collaboration points. <code>ConfigMate</code> owns the
+requests session and handler registry, delegates resource access to session
+adapters, delegates parsing and writing to stream handlers, and invokes
+<code>jsonref</code> for <code>$ref</code> replacement.</p>
+<p><a href="../../diagrams/class_diagram.svg"><img alt="Config Mate class diagram" src="../../diagrams/class_diagram.svg" /></a></p>
+<p>The generated SVG is based on the <a href="../../diagrams/src/class_diagram.puml">PlantUML
+source</a>. The diagram focuses on
+architectural relationships; external library classes are shown only where
+they connect to the Config Mate core.</p>
+<h2 id="the-loading-pipeline">The loading pipeline</h2>
+<p>All input paths converge on the same pipeline:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-1-1">location or content
+</span><span id="__span-1-2">        │
+</span><span id="__span-1-3">        ▼
+</span><span id="__span-1-4">select transport and obtain a text stream
+</span><span id="__span-1-5">        │
+</span><span id="__span-1-6">        ▼
+</span><span id="__span-1-7">select a handler from the content type
+</span><span id="__span-1-8">        │
+</span><span id="__span-1-9">        ▼
+</span><span id="__span-1-10">parse JSON, YAML, or XML into Python values
+</span><span id="__span-1-11">        │
+</span><span id="__span-1-12">        ▼
+</span><span id="__span-1-13">resolve $ref recursively with jsonref
+</span><span id="__span-1-14">        │
+</span><span id="__span-1-15">        ▼
+</span><span id="__span-1-16">return plain mappings, or a list for multiple documents
+</span></code></pre></div>
+<p><code>load_config_from_location()</code> distinguishes a URI from a local filesystem
+path. Local paths are converted to absolute <code>file://</code> URIs, so both local and
+remote resources pass through the requests session. The response content type
+selects a stream handler. Gzip response bodies are detected from their magic
+bytes and decompressed before parsing.</p>
+<p>The parsed value then reaches <code>load_config_from_dict()</code>, which calls
+<code>jsonref.replace_refs()</code>. Config Mate supplies <code>load_config_from_location()</code> as
+the loader, allowing a reference discovered by <code>jsonref</code> to re-enter the same
+transport and parsing pipeline. This is what makes references recursive across
+different documents and schemes.</p>
+<p>Reference proxies and lazy loading are disabled. Callers receive ordinary
+Python mappings rather than values that fetch content when later accessed or
+represented.</p>
+<h2 id="transport-adapters">Transport adapters</h2>
+<p><code>requests.Session</code> is the transport registry. The CLI mounts one adapter for
+each supported scheme:</p>
+<table>
+<thead>
+<tr>
+<th>Scheme</th>
+<th>Adapter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>http://</code>, <code>https://</code></td>
+<td><code>HTTPAdapter</code> or <code>BearerAuthHTTPAdapter</code></td>
+</tr>
+<tr>
+<td><code>file://</code></td>
+<td><code>FileAdapter</code></td>
+</tr>
+<tr>
+<td><code>s3://</code></td>
+<td><code>S3Adapter</code></td>
+</tr>
+<tr>
+<td><code>oci://</code></td>
+<td><code>OCIAdapter</code></td>
+</tr>
+</tbody>
+</table>
+<p>Both the root document and any external references use the same session.
+Consequently, HTTP bearer authentication and OCI configuration supplied to
+the CLI also apply while collecting referenced resources.</p>
+<p>The public <code>mount_session()</code> method makes transport support extensible. A
+caller using the Python API can associate another URI scheme with any
+compatible <code>requests</code> adapter.</p>
+<h2 id="serialization-handlers">Serialization handlers</h2>
+<p><code>StreamHandler</code> defines two operations:</p>
+<ul>
+<li><code>handle()</code> parses a text stream into mappings; and</li>
+<li><code>write()</code> serializes mappings to a text stream.</li>
+</ul>
+<p><code>ConfigMate</code> registers handlers by content type. Several MIME types can point
+to the same handler—for example, standard JSON and problem JSON use
+<code>JsonHandler</code>, while plain text is treated as YAML to support services that
+serve YAML without a specific YAML content type.</p>
+<p>The public <code>mount_handler()</code> method accepts either a <code>ContentType</code> or a string,
+so applications can register another MIME type or replace a built-in
+serialization strategy without changing the resolution pipeline.</p>
+<h2 id="entrypoints">Entrypoints</h2>
+<p>The CLI is a thin composition layer. It:</p>
+<ol>
+<li>translates <code>--ext</code> into an output content type;</li>
+<li>creates <code>ConfigMate</code>;</li>
+<li>mounts the standard transport adapters and credentials;</li>
+<li>loads and resolves the root location; and</li>
+<li>dumps the result to standard output or <code>--output</code>.</li>
+</ol>
+<p>The playground follows the same shape but starts from editor content, calls
+<code>load_config_from_content()</code>, and renders the YAML result in Streamlit. Keeping
+these entrypoints outside the core lets the same API serve automation,
+interactive exploration, and direct Python integrations.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../modular-configuration/" class="btn btn-neutral float-left" title="Why modular configuration?"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p><a href="https://www.apache.org/licenses/LICENSE-2.0"><img src="https://img.shields.io/badge/license-Apache%20License%202.0-blue"" alt="Apache License, Version 2.0" /></a></p>
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://git.terradue.com/scoop/config-mate/" class="fa fa-code-fork" style="color: #fcfcfc"> scoop/config-mate</a>
+        </span>
+    
+    
+      <span><a href="../modular-configuration/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../javascripts/config.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Fabrice Brito, Simone Tripodi" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>CLI - Config Mate</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../styles/css/app.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "CLI";
+        var mkdocs_page_input_path = "reference/cli.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../..">
+          <img src="../../imgs/icon-eoap.png" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Tutorials</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../tutorials/first-bundle/">Bundle your first configuration</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">How-to guides</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/modular-configuration/">Build a modular configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/playground/">Use the playground</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Reference</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">CLI</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#synopsis">Synopsis</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#options">Options</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#standard-output-and-logs">Standard output and logs</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#supported-input-locations">Supported input locations</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#remote-inputs-and-authentication">Remote inputs and authentication</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#http-bearer-token">HTTP bearer token</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#oci-credentials">OCI credentials</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#output-formats">Output formats</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#exit-behavior">Exit behavior</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../json-reference/">JSON Reference ($ref)</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Explanation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/modular-configuration/">Why modular configuration?</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/implementation/">How the implementation is organized</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Config Mate</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Reference</li>
+      <li class="breadcrumb-item active">CLI</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="cli-reference">CLI reference</h1>
+<p><code>config-mate</code> loads one root configuration, recursively resolves its <code>$ref</code>
+values, and serializes the collected document.</p>
+<h2 id="synopsis">Synopsis</h2>
+<div class="highlight"><pre><span></span><code><span id="__span-0-1">config-mate [OPTIONS] CONFIG
+</span></code></pre></div>
+<div class="highlight"><pre><span></span><code><span id="__span-1-1"><span class="go">config-mate --help</span>
+</span><span id="__span-1-2"><span class="go">config-mate config.yaml</span>
+</span><span id="__span-1-3"><span class="go">config-mate config.yaml --output build/config.yaml</span>
+</span><span id="__span-1-4"><span class="go">config-mate config.yaml --ext json --output build/config.json</span>
+</span></code></pre></div>
+<p><code>CONFIG</code> is required. It can be a local path or a supported URI.</p>
+<h2 id="options">Options</h2>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Value</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--ext</code></td>
+<td><code>json</code>, <code>yaml</code>, or <code>xml</code></td>
+<td><code>yaml</code></td>
+<td>Serialization format of the collected output. The match is case-insensitive.</td>
+</tr>
+<tr>
+<td><code>--output</code></td>
+<td>path</td>
+<td>standard output</td>
+<td>Write to a file. Missing parent directories are created and an existing file is overwritten.</td>
+</tr>
+<tr>
+<td><code>--oci-hostname</code></td>
+<td>text</td>
+<td><code>OCI_HOSTNAME</code></td>
+<td>Hostname used by the OCI transport adapter.</td>
+</tr>
+<tr>
+<td><code>--oci-username</code></td>
+<td>text</td>
+<td><code>OCI_USERNAME</code></td>
+<td>Username used by the OCI transport adapter.</td>
+</tr>
+<tr>
+<td><code>--oci-password</code></td>
+<td>text</td>
+<td><code>OCI_PASSWORD</code></td>
+<td>Password used by the OCI transport adapter.</td>
+</tr>
+<tr>
+<td><code>--oauth2-bearer</code></td>
+<td>text</td>
+<td><code>OAUTH2_BEARER</code></td>
+<td>Bearer token sent for HTTP and HTTPS requests.</td>
+</tr>
+<tr>
+<td><code>--help</code></td>
+<td>—</td>
+<td>—</td>
+<td>Show command help and exit.</td>
+</tr>
+</tbody>
+</table>
+<p>The output format is controlled by <code>--ext</code>, not by the extension in
+<code>--output</code>. For example, this command writes JSON despite the <code>.txt</code> suffix:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-2-1"><span class="go">config-mate config.yaml --ext json --output build/config.txt</span>
+</span></code></pre></div>
+<h2 id="standard-output-and-logs">Standard output and logs</h2>
+<p>Without <code>--output</code>, the collected document is written to standard output.
+Operational logs are emitted separately, so the data can be redirected or
+piped:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-3-1"><span class="go">config-mate config.yaml --ext json &gt; build/config.json</span>
+</span></code></pre></div>
+<p>Prefer <code>--output</code> when the command itself should create missing parent
+directories:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-4-1"><span class="go">config-mate config.yaml --output build/nested/config.yaml</span>
+</span></code></pre></div>
+<h2 id="supported-input-locations">Supported input locations</h2>
+<p>The root <code>CONFIG</code> and external <code>$ref</code> values can use the transports mounted by
+the CLI:</p>
+<table>
+<thead>
+<tr>
+<th>Location</th>
+<th>Example</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Local path</td>
+<td><code>config/root.yaml</code></td>
+<td>Converted internally to an absolute <code>file://</code> URI.</td>
+</tr>
+<tr>
+<td>File URI</td>
+<td><code>file:///workspace/config/root.yaml</code></td>
+<td>Must use a valid file URI.</td>
+</tr>
+<tr>
+<td>HTTP(S)</td>
+<td><code>https://example.org/config/root.yaml</code></td>
+<td>Optional bearer authentication is applied to both HTTP and HTTPS.</td>
+</tr>
+<tr>
+<td>S3</td>
+<td><code>s3://configuration/root.yaml</code></td>
+<td>Uses the S3 session adapter and its credential discovery behavior.</td>
+</tr>
+<tr>
+<td>OCI</td>
+<td><code>oci://registry.example.org/team/root.yaml</code></td>
+<td>Uses the OCI options or their environment-variable equivalents.</td>
+</tr>
+</tbody>
+</table>
+<p>Input may be YAML, JSON, or XML. For remote inputs, the response
+<code>Content-Type</code> selects the parser; when that header is absent, Config Mate
+assumes YAML. Gzip-compressed response bodies are detected and decompressed.</p>
+<p>See the <a href="../json-reference/"><code>$ref</code> reference</a> for fragments and relative
+resolution.</p>
+<h2 id="remote-inputs-and-authentication">Remote inputs and authentication</h2>
+<h3 id="http-bearer-token">HTTP bearer token</h3>
+<p>Pass a token as an option:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-5-1"><span class="go">config-mate https://config.example.org/root.yaml \</span>
+</span><span id="__span-5-2"><span class="go">  --oauth2-bearer &quot;$CONFIG_TOKEN&quot;</span>
+</span></code></pre></div>
+<p>Or expose it through the supported environment variable:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-6-1"><span class="go">export OAUTH2_BEARER=&quot;$CONFIG_TOKEN&quot;</span>
+</span><span id="__span-6-2"><span class="go">config-mate https://config.example.org/root.yaml</span>
+</span></code></pre></div>
+<p>The same HTTP adapter is used when following HTTP or HTTPS references inside
+the root document.</p>
+<h3 id="oci-credentials">OCI credentials</h3>
+<p>Pass credentials directly:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-7-1"><span class="go">config-mate oci://registry.example.org/team/root.yaml \</span>
+</span><span id="__span-7-2"><span class="go">  --oci-hostname registry.example.org \</span>
+</span><span id="__span-7-3"><span class="go">  --oci-username &quot;$OCI_USER&quot; \</span>
+</span><span id="__span-7-4"><span class="go">  --oci-password &quot;$OCI_PASS&quot;</span>
+</span></code></pre></div>
+<p>Or use environment variables:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-8-1"><span class="go">export OCI_HOSTNAME=registry.example.org</span>
+</span><span id="__span-8-2"><span class="go">export OCI_USERNAME=&quot;$OCI_USER&quot;</span>
+</span><span id="__span-8-3"><span class="go">export OCI_PASSWORD=&quot;$OCI_PASS&quot;</span>
+</span><span id="__span-8-4"><span class="go">config-mate oci://registry.example.org/team/root.yaml</span>
+</span></code></pre></div>
+<p>Environment variables keep credentials out of shell history, but they are
+still visible to processes with access to the environment. Use the secret
+facility provided by your CI system.</p>
+<h2 id="output-formats">Output formats</h2>
+<p>The input and output formats are independent. A YAML root can be collected as
+JSON or XML:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-9-1"><span class="go">config-mate config.yaml --ext json --output build/config.json</span>
+</span><span id="__span-9-2"><span class="go">config-mate config.yaml --ext xml --output build/config.xml</span>
+</span></code></pre></div>
+<p>YAML is the default:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-10-1"><span class="go">config-mate config.json --output build/config.yaml</span>
+</span></code></pre></div>
+<h2 id="exit-behavior">Exit behavior</h2>
+<p>The command exits with:</p>
+<ul>
+<li><code>0</code> after successful resolution and serialization;</li>
+<li><code>1</code> when loading, parsing, resolving, or writing fails; and</li>
+<li>Click's non-zero usage exit when arguments or option values are invalid.</li>
+</ul>
+<p>Failures are logged with a <strong>FAIL</strong> marker and the underlying exception.
+Success is logged with a <strong>SUCCESS</strong> marker. Do not treat a partially created
+output file as valid after a failure; only consume the artifact when the
+command exits successfully.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../../how-to/playground/" class="btn btn-neutral float-left" title="Use the playground"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../json-reference/" class="btn btn-neutral float-right" title="JSON Reference ($ref)">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p><a href="https://www.apache.org/licenses/LICENSE-2.0"><img src="https://img.shields.io/badge/license-Apache%20License%202.0-blue"" alt="Apache License, Version 2.0" /></a></p>
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://git.terradue.com/scoop/config-mate/" class="fa fa-code-fork" style="color: #fcfcfc"> scoop/config-mate</a>
+        </span>
+    
+    
+      <span><a href="../../how-to/playground/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../json-reference/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../javascripts/config.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

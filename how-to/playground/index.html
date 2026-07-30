@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Fabrice Brito, Simone Tripodi" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Use the playground - Config Mate</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../styles/css/app.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Use the playground";
+        var mkdocs_page_input_path = "how-to/playground.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../..">
+          <img src="../../imgs/icon-eoap.png" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Tutorials</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../tutorials/first-bundle/">Bundle your first configuration</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">How-to guides</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../modular-configuration/">Build a modular configuration</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Use the playground</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#resolve-the-included-example">Resolve the included example</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#run-your-working-tree-in-a-container">Run your working tree in a container</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#run-the-application-directly">Run the application directly</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#understand-the-playgrounds-limits">Understand the playground's limits</a>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Reference</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../reference/cli/">CLI</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../reference/json-reference/">JSON Reference ($ref)</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Explanation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/modular-configuration/">Why modular configuration?</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/implementation/">How the implementation is organized</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Config Mate</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">How-to guides</li>
+      <li class="breadcrumb-item active">Use the playground</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="use-the-playground">Use the playground</h1>
+<p>The Config Mate playground is a Streamlit application for experimenting with
+YAML and seeing its fully resolved form immediately. It is useful for learning
+<code>$ref</code>, reviewing a configuration fragment, and diagnosing a reference before
+adding it to a root document.</p>
+<p>The playground is an exploration tool. Use the CLI for repeatable builds and
+CI pipelines.</p>
+<h2 id="resolve-the-included-example">Resolve the included example</h2>
+<ol>
+<li>Start the application using one of the methods below.</li>
+<li>Open the URL printed by Streamlit, or <code>http://localhost</code> for the container
+   tasks.</li>
+<li>Review or edit the YAML in the code editor.</li>
+<li>Select <strong>Update</strong>.</li>
+<li>Read the <strong>Referenced and parsed configuration</strong> below the editor.</li>
+</ol>
+<p>A green <strong>Success</strong> badge means the YAML was parsed and all references were
+resolved. A <strong>Validation failure</strong> badge includes the parser, loading, or
+reference error.</p>
+<p>The bundled example demonstrates both internal references such as
+<code>#/components/recipes/simple_exit_handler</code> and HTTPS references to remote CWL
+documents. The machine running Streamlit must be able to reach any remote
+resource used by the example.</p>
+<h2 id="run-your-working-tree-in-a-container">Run your working tree in a container</h2>
+<p>To build the playground from the current checkout and run it:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-0-1"><span class="go">task run_playground_dev</span>
+</span></code></pre></div>
+<p>This is the most representative option when changing Config Mate or the
+playground itself.</p>
+<h2 id="run-the-application-directly">Run the application directly</h2>
+<p>From the repository root, install the application dependencies and start
+Streamlit:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-1-1"><span class="go">python -m pip install -e .</span>
+</span><span id="__span-1-2"><span class="go">python -m pip install streamlit streamlit-code-editor</span>
+</span><span id="__span-1-3"><span class="go">streamlit run playground/playground.py</span>
+</span></code></pre></div>
+<p>Streamlit normally serves the application at <code>http://localhost:8501</code>.</p>
+<h2 id="understand-the-playgrounds-limits">Understand the playground's limits</h2>
+<ul>
+<li>The editor accepts YAML input and displays YAML output.</li>
+<li>The playground does not save a bundle to disk; copy the result or reproduce
+  the operation with the CLI.</li>
+<li>It is not an application-schema validator. Success means the document was
+  parsed and its references were resolved.</li>
+<li>Remote references are fetched by the Streamlit server, not by the browser.</li>
+<li>Do not paste secrets into a shared or remotely hosted playground.</li>
+</ul>
+<p>For command-line output formats and authenticated remote references, use the
+<a href="../../reference/cli/">CLI</a>.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../modular-configuration/" class="btn btn-neutral float-left" title="Build a modular configuration"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../reference/cli/" class="btn btn-neutral float-right" title="CLI">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p><a href="https://www.apache.org/licenses/LICENSE-2.0"><img src="https://img.shields.io/badge/license-Apache%20License%202.0-blue"" alt="Apache License, Version 2.0" /></a></p>
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://git.terradue.com/scoop/config-mate/" class="fa fa-code-fork" style="color: #fcfcfc"> scoop/config-mate</a>
+        </span>
+    
+    
+      <span><a href="../modular-configuration/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../../reference/cli/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../javascripts/config.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

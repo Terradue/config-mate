@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Fabrice Brito, Simone Tripodi" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Why modular configuration? - Config Mate</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../styles/css/app.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Why modular configuration?";
+        var mkdocs_page_input_path = "explanation/modular-configuration.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../..">
+          <img src="../../imgs/icon-eoap.png" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Tutorials</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../tutorials/first-bundle/">Bundle your first configuration</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">How-to guides</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/modular-configuration/">Build a modular configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/playground/">Use the playground</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Reference</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../reference/cli/">CLI</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../reference/json-reference/">JSON Reference ($ref)</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Explanation</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Why modular configuration?</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#reuse-is-more-than-removing-duplication">Reuse is more than removing duplication</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#ref-is-the-assembly-mechanism">$ref is the assembly mechanism</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#a-component-catalog-is-an-api">A component catalog is an API</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#collection-defines-a-trust-boundary">Collection defines a trust boundary</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#the-trade-offs">The trade-offs</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../implementation/">How the implementation is organized</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Config Mate</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Explanation</li>
+      <li class="breadcrumb-item active">Why modular configuration?</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="why-modular-configuration">Why modular configuration?</h1>
+<p>Large configuration files tend to accumulate three different kinds of
+information: reusable policy, application-specific intent, and
+environment-specific values. When they live in one document, repetition hides
+which settings are intentional and makes a change difficult to propagate
+safely.</p>
+<p>Config Mate supports a source-and-artifact model:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-0-1">small root documents ─┐
+</span><span id="__span-0-2">generic components ───┼─ $ref resolution ─&gt; one collected artifact
+</span><span id="__span-0-3">remote catalogs ──────┘
+</span></code></pre></div>
+<p>Humans maintain the modular sources. Systems that require a single file
+consume the collected artifact.</p>
+<h2 id="reuse-is-more-than-removing-duplication">Reuse is more than removing duplication</h2>
+<p>A generic component gives a configuration concept a name and a clear owner.
+For example, <code>standard-python-worker</code> can capture an approved image,
+healthcheck, and resource profile. Root documents then express the meaningful
+choice—use the standard worker—instead of copying its implementation details.</p>
+<p>This has several effects:</p>
+<ul>
+<li><strong>Consistency:</strong> consumers begin from the same reviewed policy.</li>
+<li><strong>Change control:</strong> a component can be updated and tested in one place.</li>
+<li><strong>Review clarity:</strong> root-document diffs show application intent rather than
+  repeated boilerplate.</li>
+<li><strong>Discoverability:</strong> a component catalog exposes supported building blocks.</li>
+<li><strong>Earlier failure:</strong> collecting roots in CI catches missing resources and
+  invalid pointers before the runtime system sees them.</li>
+</ul>
+<p>The goal is not the fewest possible lines. The goal is a useful boundary
+between stable, generic capabilities and local decisions.</p>
+<h2 id="ref-is-the-assembly-mechanism"><code>$ref</code> is the assembly mechanism</h2>
+<p>JSON Reference provides a URI-shaped address for a component. URI resolution
+makes the same composition model useful across a file tree, a web server, an
+S3 bucket, or an OCI registry. JSON Pointer fragments allow one catalog
+document to publish several values.</p>
+<p>Because the model is understood by specifications such as JSON Schema and
+OpenAPI and by many editors, authors can work with familiar syntax. Config
+Mate fills the delivery gap for consumers that cannot load a multi-document
+configuration: it follows the references and produces one self-contained
+snapshot.</p>
+<h2 id="a-component-catalog-is-an-api">A component catalog is an API</h2>
+<p>Once several roots use <code>components/runtimes.yaml#/python-worker</code>, the document
+path and pointer are an interface. Component maintainers should apply the same
+discipline used for a software API:</p>
+<ul>
+<li>choose capability-oriented names;</li>
+<li>document the value's intended use and assumptions;</li>
+<li>preserve compatible paths and shapes;</li>
+<li>version breaking changes; and</li>
+<li>test representative consumers before publishing.</li>
+</ul>
+<p>Remote catalogs increase organizational reuse, but also increase coupling.
+Pinning a version makes collection reproducible and prevents a component
+publisher from silently changing a consumer's next artifact.</p>
+<h2 id="collection-defines-a-trust-boundary">Collection defines a trust boundary</h2>
+<p>Collecting a configuration fetches and incorporates referenced content.
+Therefore every referenced file, host, bucket, or registry becomes part of
+the configuration's supply chain.</p>
+<p>Use authenticated transports where needed, restrict references to trusted
+locations, and avoid putting credentials in source documents. Review the
+collected artifact when adopting a new remote component. Config Mate resolves
+content; it does not establish that the content is trustworthy or valid for a
+particular application.</p>
+<h2 id="the-trade-offs">The trade-offs</h2>
+<p>Modularity introduces indirection. Excessively small components make a
+configuration hard to read, while mutable remote references can make a build
+hard to reproduce. Collection also creates a generated artifact that must not
+be edited independently.</p>
+<p>A practical design keeps cohesive settings together, uses a shallow
+composition hierarchy, pins shared remote content, and regenerates artifacts
+in automation. Keep a value local until a stable reusable concept emerges;
+extracting every repeated scalar usually creates more navigation than value.</p>
+<p>For an actionable workflow, see <a href="../../how-to/modular-configuration/">Build a modular
+configuration</a>.</p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../../reference/json-reference/" class="btn btn-neutral float-left" title="JSON Reference ($ref)"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../implementation/" class="btn btn-neutral float-right" title="How the implementation is organized">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p><a href="https://www.apache.org/licenses/LICENSE-2.0"><img src="https://img.shields.io/badge/license-Apache%20License%202.0-blue"" alt="Apache License, Version 2.0" /></a></p>
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://git.terradue.com/scoop/config-mate/" class="fa fa-code-fork" style="color: #fcfcfc"> scoop/config-mate</a>
+        </span>
+    
+    
+      <span><a href="../../reference/json-reference/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../implementation/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../javascripts/config.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>

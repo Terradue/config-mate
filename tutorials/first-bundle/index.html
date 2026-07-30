@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Fabrice Brito, Simone Tripodi" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Bundle your first configuration - Config Mate</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../../styles/css/app.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Bundle your first configuration";
+        var mkdocs_page_input_path = "tutorials/first-bundle.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../..">
+          <img src="../../imgs/icon-eoap.png" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">Home</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Tutorials</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="#">Bundle your first configuration</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#before-you-begin">Before you begin</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#1-create-a-reusable-component">1. Create a reusable component</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#2-reference-the-component">2. Reference the component</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#3-preview-the-collected-configuration">3. Preview the collected configuration</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#4-write-a-deployable-artifact">4. Write a deployable artifact</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#next-steps">Next steps</a>
+    </li>
+    </ul>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">How-to guides</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/modular-configuration/">Build a modular configuration</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../how-to/playground/">Use the playground</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Reference</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../reference/cli/">CLI</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../reference/json-reference/">JSON Reference ($ref)</a>
+                  </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Explanation</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/modular-configuration/">Why modular configuration?</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../../explanation/implementation/">How the implementation is organized</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">Config Mate</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" aria-label="Docs"></a></li>
+          <li class="breadcrumb-item">Tutorials</li>
+      <li class="breadcrumb-item active">Bundle your first configuration</li>
+    <li class="wy-breadcrumbs-aside">
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="bundle-your-first-configuration">Bundle your first configuration</h1>
+<p>This tutorial creates two small YAML files and uses Config Mate to collect
+them into one deployable file.</p>
+<h2 id="before-you-begin">Before you begin</h2>
+<p>You need Python 3.10 or newer and access to the package registry that provides
+Config Mate. Install the package in a virtual environment:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-0-1"><span class="go">python -m pip install config-mate</span>
+</span><span id="__span-0-2"><span class="go">config-mate --help</span>
+</span></code></pre></div>
+<h2 id="1-create-a-reusable-component">1. Create a reusable component</h2>
+<p>Create <code>components/runtimes.yaml</code>:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-1-1"><span class="nt">python</span><span class="p">:</span>
+</span><span id="__span-1-2"><span class="w">  </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">python:3.13-slim</span>
+</span><span id="__span-1-3"><span class="w">  </span><span class="nt">replicas</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+</span><span id="__span-1-4"><span class="w">  </span><span class="nt">healthcheck</span><span class="p">:</span>
+</span><span id="__span-1-5"><span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/health</span>
+</span><span id="__span-1-6"><span class="w">    </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span>
+</span></code></pre></div>
+<p>The top-level <code>python</code> key gives the component a stable name. Other root
+documents can reuse the same value.</p>
+<h2 id="2-reference-the-component">2. Reference the component</h2>
+<p>Create <code>config.yaml</code> beside the <code>components</code> directory:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-2-1"><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</span><span id="__span-2-2"><span class="nt">services</span><span class="p">:</span>
+</span><span id="__span-2-3"><span class="w">  </span><span class="nt">orders</span><span class="p">:</span>
+</span><span id="__span-2-4"><span class="w">    </span><span class="nt">runtime</span><span class="p">:</span>
+</span><span id="__span-2-5"><span class="w">      </span><span class="nt">$ref</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">components/runtimes.yaml#/python</span>
+</span><span id="__span-2-6"><span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8080</span>
+</span></code></pre></div>
+<p>The part before <code>#</code> locates the document. The fragment <code>/python</code> is a JSON
+Pointer selecting the <code>python</code> key in that document.</p>
+<p>Your files now look like this:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-3-1">.
+</span><span id="__span-3-2">├── components
+</span><span id="__span-3-3">│   └── runtimes.yaml
+</span><span id="__span-3-4">└── config.yaml
+</span></code></pre></div>
+<h2 id="3-preview-the-collected-configuration">3. Preview the collected configuration</h2>
+<p>Run:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-4-1"><span class="go">config-mate config.yaml</span>
+</span></code></pre></div>
+<p>Because no output path or format was specified, Config Mate writes YAML to
+standard output. The collected document includes the component in place of
+the reference:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-5-1"><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</span><span id="__span-5-2"><span class="nt">services</span><span class="p">:</span>
+</span><span id="__span-5-3"><span class="w">  </span><span class="nt">orders</span><span class="p">:</span>
+</span><span id="__span-5-4"><span class="w">    </span><span class="nt">runtime</span><span class="p">:</span>
+</span><span id="__span-5-5"><span class="w">      </span><span class="nt">image</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">python:3.13-slim</span>
+</span><span id="__span-5-6"><span class="w">      </span><span class="nt">replicas</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+</span><span id="__span-5-7"><span class="w">      </span><span class="nt">healthcheck</span><span class="p">:</span>
+</span><span id="__span-5-8"><span class="w">        </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/health</span>
+</span><span id="__span-5-9"><span class="w">        </span><span class="nt">interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span>
+</span><span id="__span-5-10"><span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8080</span>
+</span></code></pre></div>
+<h2 id="4-write-a-deployable-artifact">4. Write a deployable artifact</h2>
+<p>Create a JSON bundle:</p>
+<div class="highlight"><pre><span></span><code><span id="__span-6-1"><span class="go">config-mate config.yaml --ext json --output build/config.json</span>
+</span></code></pre></div>
+<p>Config Mate creates the <code>build</code> directory if needed. <code>build/config.json</code> is a
+single file and no longer requires <code>components/runtimes.yaml</code> at runtime.</p>
+<p>You have now separated the maintainable source configuration from its
+portable delivery artifact.</p>
+<h2 id="next-steps">Next steps</h2>
+<ul>
+<li><a href="../../how-to/modular-configuration/">Build a modular configuration</a> covers
+  naming, repository layout, reuse, and validation in CI.</li>
+<li><a href="../../how-to/playground/">Use the playground</a> lets you experiment with
+  references in a browser.</li>
+<li><a href="../../reference/cli/">CLI reference</a> documents all formats, transports,
+  credentials, and output behavior.</li>
+</ul>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../.." class="btn btn-neutral float-left" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../../how-to/modular-configuration/" class="btn btn-neutral float-right" title="Build a modular configuration">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+      <p><a href="https://www.apache.org/licenses/LICENSE-2.0"><img src="https://img.shields.io/badge/license-Apache%20License%202.0-blue"" alt="Apache License, Version 2.0" /></a></p>
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://git.terradue.com/scoop/config-mate/" class="fa fa-code-fork" style="color: #fcfcfc"> scoop/config-mate</a>
+        </span>
+    
+    
+      <span><a href="../.." style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../../how-to/modular-configuration/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "../..";</script>
+    <script src="../../js/theme_extra.js"></script>
+    <script src="../../js/theme.js"></script>
+      <script src="../../javascripts/config.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+      <script src="../../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
