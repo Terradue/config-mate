@@ -25,13 +25,17 @@ plugins:
   - mermaid2:
       version: 11.4.1
   - build_plantuml:
-      render: local
-      bin_path: plantuml
+      render: 'server' # or "local" for local rendering
+      disable_ssl_certificate_validation: true # for self-signed and invalid certs
       output_format: 'svg'
       allow_multiple_roots: false
       diagram_root: 'docs/diagrams'
       input_folder: 'src'
       output_folder: '.'
+      theme_enabled: true
+      theme_folder: "include/themes"
+      theme_light: "light.puml"
+      theme_dark: "dark.puml"
 
 markdown_extensions:
   - pymdownx.details
