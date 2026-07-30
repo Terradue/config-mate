@@ -25,5 +25,7 @@ local release tag.
 
 [1.0.0] - 2026-07-30
 
+- First public version.
+
 [Unreleased]: https://github.com/Terradue/cwl-loader/compare/v1.0.0...HEAD
-[0.16.0]: https://github.com/Terradue/cwl-loader/releases/tag/v1.0.0
+[0.1.0]: https://github.com/Terradue/cwl-loader/releases/tag/v1.0.0
