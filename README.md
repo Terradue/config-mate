@@ -3,8 +3,6 @@
 [![PyPI - Version](https://img.shields.io/pypi/v/config-mate.svg)](https://pypi.org/project/config-mate)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/config-mate.svg)](https://pypi.org/project/config-mate)
 
-Transpiler Mate is a Python library and CLI that extracts `schema.org/SoftwareApplication` metadata from annotated CWL documents and converts it into publication-ready formats.
-
 Config Mate recursively resolves JSON References (`$ref`) across JSON, YAML,
 and XML configuration and writes one self-contained JSON, YAML, or XML
 artifact.

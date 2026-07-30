@@ -26,31 +26,6 @@ The bundled example demonstrates both internal references such as
 documents. The machine running Streamlit must be able to reach any remote
 resource used by the example.
 
-## Run the published container
-
-With [Task](https://taskfile.dev/) and Docker installed:
-
-```console
-task run_playground
-```
-
-This pulls `ghcr.io/Terradue/config-mate/playground:latest`, publishes the
-Streamlit service on port 80, and removes the container when it stops. Open:
-
-```text
-http://localhost
-```
-
-If port 80 is already in use, run the container directly with another host
-port:
-
-```console
-docker run --rm -it -p 8080:8501 \
-  ghcr.io/Terradue/config-mate/playground:latest
-```
-
-Then open `http://localhost:8080`.
-
 ## Run your working tree in a container
 
 To build the playground from the current checkout and run it:
