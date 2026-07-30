@@ -61,7 +61,7 @@ class ConfigMate:
             ContentType.PLAIN, yaml_handler
         )  # GitHub RAW uses to reply back 'text/plain'
         self.mount_handler(ContentType.YAML, yaml_handler)
-        self.mount_handler("text/yaml", yaml_handler)
+        self.mount_handler(ContentType.TEXT_YAML, yaml_handler)
 
         logger.debug("All supported handlers mounted")
 
