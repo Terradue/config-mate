@@ -28,7 +28,7 @@ classifiers = [
 ]
 dependencies = [
   "click==8.4.2",
-  "ruamel.yaml==0.18.16",
+  "ruamel.yaml==0.19.1",
   "jsonref==1.1.0",
   "loguru==0.7.3",
   "xmltodict==1.0.4",
