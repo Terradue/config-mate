@@ -1,0 +1,13 @@
+.pydevproject
+.project
+__pycache__
+/.coverage
+/.pytest_cache/
+.venv
+.vscode
+docs/api
+.task
+models.py
+dist
+uv.lock
+.gitlab-ci-local

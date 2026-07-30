@@ -1,0 +1,42 @@
+# Copyright 2026 Terradue
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+from collections.abc import Mapping
+from typing import Any, TextIO
+
+import xmltodict
+from session_adapters.http_conts import DEFAULT_ENCODING
+
+from . import StreamHandler
+
+
+class XmlHandler(StreamHandler):
+    def handle(self, stream: TextIO) -> Mapping[str, Any] | list[Mapping[str, Any]]:
+        return xmltodict.parse(
+            stream.read(), encoding=DEFAULT_ENCODING, process_namespaces=True
+        )
+
+    def write(
+        self, configuration: Mapping[str, Any] | list[Mapping[str, Any]], stream: TextIO
+    ) -> None:
+        xmltodict.unparse(
+            input_dict={"configuration": configuration},
+            output=stream,
+            encoding=DEFAULT_ENCODING,
+            full_document=True,
+            pretty=True,
+        )

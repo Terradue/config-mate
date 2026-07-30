@@ -1,0 +1,81 @@
+site_name: Config Mate
+# site_url: not available
+site_author: Fabrice Brito, Simone Tripodi
+repo_url: https://git.terradue.com/scoop/config-mate/
+repo_name: scoop/config-mate
+
+theme:
+  logo: imgs/icon-eoap.png
+  name: readthedocs
+
+  palette:
+  - media: "(prefers-color-scheme: light)"
+    scheme: default
+    toggle:
+      icon: material/toggle-switch-off-outline
+      name: Switch to dark mode
+  - media: "(prefers-color-scheme: dark)"
+    scheme: slate
+    toggle:
+      icon: material/toggle-switch
+      name: Switch to light mode
+
+plugins:
+  - search
+  - mermaid2:
+      version: 11.4.1
+  - build_plantuml:
+      render: local
+      bin_path: plantuml
+      output_format: 'svg'
+      allow_multiple_roots: false
+      diagram_root: 'docs/diagrams'
+      input_folder: 'src'
+      output_folder: '.'
+
+markdown_extensions:
+  - pymdownx.details
+  - abbr
+  - admonition
+  - footnotes
+  - pymdownx.caret
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.superfences
+  - pymdownx.tabbed
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_div_format
+  - attr_list
+  - pymdownx.snippets:
+      base_path: './'
+  - pymdownx.highlight:
+      line_spans: __span
+
+extra_css:
+  - styles/css/app.css
+  
+extra_javascript:
+  - javascripts/config.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - Home: index.md
+  - Tutorials:
+    - Bundle your first configuration: tutorials/first-bundle.md
+  - How-to guides:
+    - Build a modular configuration: how-to/modular-configuration.md
+    - Use the playground: how-to/playground.md
+  - Reference:
+    - CLI: reference/cli.md
+    - JSON Reference ($ref): reference/json-reference.md
+  - Explanation:
+    - Why modular configuration?: explanation/modular-configuration.md
+    - How the implementation is organized: explanation/implementation.md
+
+copyright: <a href="https://img.shields.io/badge/License-CC_BY--SA_4.0-lightgrey.svg">License CC BY-SA 4.0</a>, by <a href="https://creativecommons.org/licenses/by-sa/4.0/">Creative Commons</a>

@@ -1,0 +1,58 @@
+# Config Mate (c) 2025
+# 
+# Config Mate is licensed under
+# Creative Commons Attribution-ShareAlike 4.0 International.
+# 
+# You should have received a copy of the license along with this work.
+# If not, see <https://creativecommons.org/licenses/by-sa/4.0/>.
+
+version: '3'
+
+includes:
+  quality: https://raw.githubusercontent.com/Terradue/taskfile-utils/refs/heads/main/quality.yaml
+
+vars:
+  IMAGE_NAME: ghcr.io/Terradue/config-mate/playground:latest
+
+tasks:
+
+  build_playground_dev:
+    internal: true
+    desc: Build the playground container
+    cmds:
+    - docker build -t playground -f playground/Dockerfile .
+
+  run_playground:
+    desc: Run the playground container
+    cmds:
+    - docker pull {{.IMAGE_NAME}}
+    - docker run --rm -it -p 80:8501 {{.IMAGE_NAME}}
+
+  run_playground_dev:
+    desc: Build and run the playground container
+    deps:
+    - build_playground_dev
+    cmds:
+    - docker run --rm -it -p 80:8501 playground
+
+  playground: 
+    desc: Run the local playground app
+    cmds:
+    - pip install streamlit streamlit_code_editor plantuml .
+    - cd playground
+    - streamlit run playground/playground.py
+
+  ci:validate:
+    preconditions:
+    - sh: command -v glab >/dev/null 2>&1
+      msg: "Missing glab, see https://docs.gitlab.com/cli/"
+    cmds:
+    - glab ci lint .gitlab-ci.yml
+    - glab ci lint --dry-run --include-jobs
+
+  ci:local:
+    preconditions:
+    - sh: command -v npx >/dev/null 2>&1
+      msg: "Missing npx, see https://docs.npmjs.com/cli/v8/commands/npx"
+    cmds:
+    - npx gitlab-ci-local verify
