@@ -20,6 +20,13 @@ config-mate config.yaml --ext json --output build/config.json
 
 ## Options
 
+!!! warning "Available from version 1.2.0: registry credentials files"
+
+    Support for the
+    [containers-auth.json format](https://man.archlinux.org/man/containers-auth.json.5)
+    is available from **1.2.0**. Use `--authfile` to select a credentials file
+    when accessing OCI sources.
+
 | Option | Value | Default | Description |
 | --- | --- | --- | --- |
 | `--ext` | `json`, `yaml`, or `xml` | `yaml` | Serialization format of the collected output. The match is case-insensitive. |
@@ -27,6 +34,7 @@ config-mate config.yaml --ext json --output build/config.json
 | `--oci-hostname` | text | `OCI_HOSTNAME` | Hostname used by the OCI transport adapter. |
 | `--oci-username` | text | `OCI_USERNAME` | Username used by the OCI transport adapter. |
 | `--oci-password` | text | `OCI_PASSWORD` | Password used by the OCI transport adapter. |
+| `--authfile` | path | `${XDG_RUNTIME_DIR}/containers/auth.json` | `REGISTRY_AUTH_FILE` |
 | `--oauth2-bearer` | text | `OAUTH2_BEARER` | Bearer token sent for HTTP and HTTPS requests. |
 | `--help` | — | — | Show command help and exit. |
 
