@@ -9,7 +9,7 @@ Config Mate recursively resolves JSON References (`$ref`) across JSON, YAML,
 and XML configuration and writes one self-contained JSON, YAML, or XML
 artifact.
 
-```console
+```bash
 config-mate config/root.yaml --output build/config.yaml
 ```
 
@@ -35,7 +35,7 @@ The documentation follows the [Diátaxis](https://diataxis.fr/) structure:
 Config Mate requires Python 3.10 or newer. After configuring access to the
 package registry used by your organization:
 
-```console
+```bash
 python -m pip install config-mate
 config-mate --help
 ```
@@ -86,7 +86,7 @@ service:
 
 run:
 
-```console
+```bash
 config-mate config.yaml --ext json --output build/config.json
 ```
 
@@ -97,7 +97,7 @@ The output is a single JSON document with the referenced runtime inlined.
 The Streamlit playground provides an editor for trying YAML references and
 viewing the resolved result:
 
-```console
+```bash
 task run_playground
 ```
 
@@ -108,7 +108,7 @@ development-container, and direct-run instructions.
 
 Install [Hatch](https://hatch.pypa.io/) and [Taskfiles](https://taskfile.dev/docs/guide) then install the Git hook:
 
-```console
+```bash
 task quality:pre-commit:install
 ```
 
@@ -116,8 +116,9 @@ Every commit runs Ruff (including the configured McCabe complexity limit),
 Ruff formatting, strict mypy checks, and the pytest suite.
 Run the complete hook explicitly with:
 
-```console
+```bash
 task quality:pre-commit:run
+```
 
 ## License
 
