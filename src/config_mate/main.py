@@ -14,6 +14,7 @@
 
 """Bundle configuration references from the command line."""
 
+import os
 import sys
 import time
 from datetime import datetime
@@ -23,12 +24,26 @@ import click
 from loguru import logger
 from requests.adapters import HTTPAdapter
 from session_adapters.bearer_auth_http_adapter import BearerAuthHTTPAdapter
+from session_adapters.conainers_auth import ContainersAuth
 from session_adapters.file_adapter import FileAdapter
 from session_adapters.http_conts import ContentType
 from session_adapters.oci_adapter import OCIAdapter
 from session_adapters.s3_adapter import S3Adapter
 
 from . import ConfigMate
+
+
+def _default_authfile() -> Path:
+    """Resolve the platform default registry credentials path at invocation time."""
+    # Windows / macOS
+    base_dir = Path.home() / ".config"
+
+    if sys.platform == "linux":
+        runtime_dir = os.environ.get("XDG_RUNTIME_DIR")
+        if runtime_dir:
+            base_dir = Path(runtime_dir)
+
+    return base_dir / "containers" / "auth.json"
 
 
 @click.command()
@@ -48,6 +63,16 @@ from . import ConfigMate
 @click.option("--oci-hostname", envvar="OCI_HOSTNAME", show_envvar=True)
 @click.option("--oci-username", envvar="OCI_USERNAME", show_envvar=True)
 @click.option("--oci-password", envvar="OCI_PASSWORD", show_envvar=True)
+@click.option(
+    "--authfile",
+    help="Path of the managed registry credentials file",
+    envvar="REGISTRY_AUTH_FILE",
+    show_envvar=True,
+    default=_default_authfile,
+    show_default=True,
+    required=False,
+    type=click.Path(path_type=Path),
+)
 @click.option("--oauth2-bearer", envvar="OAUTH2_BEARER", show_envvar=True)
 # Click passes each declared option as a separate callback argument.
 def main(  # noqa: PLR0913
@@ -58,6 +83,7 @@ def main(  # noqa: PLR0913
     oci_hostname: str | None = None,
     oci_username: str | None = None,
     oci_password: str | None = None,
+    authfile: Path | None,
     oauth2_bearer: str | None = None,
 ) -> None:
     """Resolve CONFIG references and write the selected output format."""
@@ -82,7 +108,9 @@ def main(  # noqa: PLR0913
         case _:
             raise ValueError(f"'{ext}' not supported (yet), please stay tuned.")
 
-    config_mate = _create_config_mate(oci_hostname, oci_username, oci_password, oauth2_bearer)
+    config_mate = _create_config_mate(
+        oci_hostname, oci_username, oci_password, authfile, oauth2_bearer
+    )
 
     try:
         config_dict = config_mate.load_config_from_location(config)
@@ -111,7 +139,7 @@ def main(  # noqa: PLR0913
         exit_code = 1
         logger.error("------------------------------------------------------------------------")
         logger.error("FAIL")
-        logger.opt(exception=error).error("Configuration rendering failed")
+        logger.error(error)
         logger.error("------------------------------------------------------------------------")
 
     end_time = time.time()
@@ -128,6 +156,7 @@ def _create_config_mate(
     oci_hostname: str | None,
     oci_username: str | None,
     oci_password: str | None,
+    authfile: Path | None,
     oauth2_bearer: str | None,
 ) -> ConfigMate:
     """Mount the CLI transports with the supplied authentication settings."""
@@ -138,9 +167,16 @@ def _create_config_mate(
     config_mate.mount_session("https://", http_adapter)
     config_mate.mount_session("file://", FileAdapter())
     config_mate.mount_session("s3://", S3Adapter())
-    config_mate.mount_session(
-        "oci://",
-        OCIAdapter(hostname=oci_hostname, username=oci_username, password=oci_password),
+
+    containers_auth = (
+        ContainersAuth.get_instance(authfile)
+        if authfile is not None and authfile.exists()
+        else ContainersAuth(auths={})
     )
+
+    if oci_hostname and oci_username and oci_password:
+        containers_auth.add_auth(oci_hostname, oci_username, oci_password)
+
+    config_mate.mount_session("oci://", OCIAdapter(containers_auth))
 
     return config_mate
