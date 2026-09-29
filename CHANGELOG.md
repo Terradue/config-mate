@@ -23,9 +23,18 @@ local release tag.
 
 ### Security
 
-[1.0.0] - 2026-07-30
+[1.0.0] - 2026-09-29
+
+### Added
 
 - First public version.
+- dynamic resolution of the [authfile](https://man.archlinux.org/man/containers-auth.json.5) according to the requirements below:
+    - on Linux, the default is `${XDG_RUNTIME_DIR}/containers/auth.json`;
+    - the default value of this option is read from the `REGISTRY_AUTH_FILE` environment variable.
 
-[Unreleased]: https://github.com/Terradue/cwl-loader/compare/v1.0.0...HEAD
-[0.1.0]: https://github.com/Terradue/cwl-loader/releases/tag/v1.0.0
+### Changed
+
+- Improved type annotations and internal code quality by addressing mypy, Ruff, and Bandit findings, without changing public APIs or runtime behavior.
+
+[Unreleased]: https://github.com/Terradue/config-mate/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/Terradue/config-mate/releases/tag/v1.0.0

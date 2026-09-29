@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+"""Load, resolve, and serialize configurations."""
 
 from collections.abc import Mapping
 from gzip import GzipFile
@@ -36,16 +35,21 @@ from .handlers.yaml_handler import YamlHandler
 
 @final
 class ConfigMate:
-    def __init__(self):
+    """Resolve configuration references using registered transports and formats.
+
+    Attributes:
+        session: Session used to retrieve remote configurations.
+        handlers: Registered serialization handlers by content type.
+    """
+
+    def __init__(self) -> None:
         self.session = requests.Session()
 
         logger.debug("All supported schemes mounted")
 
-        self.handlers = {}
+        self.handlers: dict[ContentType | str, StreamHandler] = {}
 
-        logger.debug(
-            "Handlers registry initialized, mounting default supported handlers..."
-        )
+        logger.debug("Handlers registry initialized, mounting default supported handlers...")
 
         json_handler = JsonHandler()
         self.mount_handler(ContentType.JSON, json_handler)
@@ -65,34 +69,22 @@ class ConfigMate:
 
         logger.debug("All supported handlers mounted")
 
-    def mount_session(self, scheme: str, adapter: BaseAdapter):
+    def mount_session(self, scheme: str, adapter: BaseAdapter) -> None:
+        """Register a transport adapter for a URL prefix."""
         logger.debug(f"Mounting '{scheme}' scheme to '{type(adapter).__name__}'...")
         self.session.mount(scheme, adapter)
-        logger.debug(
-            f"Scheme '{scheme}' successfully mount to '{type(adapter).__name__}'"
-        )
+        logger.debug(f"Scheme '{scheme}' successfully mount to '{type(adapter).__name__}'")
 
-    def mount_handler(self, content_type: ContentType | str, handler: StreamHandler):
-        mime_type = (
-            content_type.value
-            if isinstance(content_type, ContentType)
-            else content_type
-        )
-        logger.debug(
-            f"Mounting '{mime_type}' mime-type to '{type(handler).__name__}'..."
-        )
+    def mount_handler(self, content_type: ContentType | str, handler: StreamHandler) -> None:
+        """Register a reader and writer for a content type."""
+        mime_type = content_type.value if isinstance(content_type, ContentType) else content_type
+        logger.debug(f"Mounting '{mime_type}' mime-type to '{type(handler).__name__}'...")
         self.handlers[content_type] = handler
-        logger.debug(
-            f"mime-type '{mime_type}' successfully mount to '{type(handler).__name__}'"
-        )
+        logger.debug(f"mime-type '{mime_type}' successfully mount to '{type(handler).__name__}'")
 
     def _get_handler(self, content_type: ContentType | str) -> StreamHandler:
         handler = self.handlers.get(content_type)
-        mime_type = (
-            content_type.value
-            if isinstance(content_type, ContentType)
-            else content_type
-        )
+        mime_type = content_type.value if isinstance(content_type, ContentType) else content_type
 
         if not handler:
             raise ValueError(
@@ -103,24 +95,27 @@ class ConfigMate:
 
         return handler
 
-    def _is_valid_url(self, path_or_url: str):
+    def _is_valid_url(self, path_or_url: str) -> str | bool:
         try:
             url_parts = urlparse(path_or_url)
             return url_parts.scheme
-        except Exception:
+        except ValueError:
             return False
 
     def load_config_from_dict(
         self, config_dict: Mapping[str, Any], base_uri: str = ""
     ) -> Mapping[str, Any]:
-        """
-        Build a Config from a Mapping (top-level must be a Mapping).
+        """Resolve JSON references in a configuration mapping.
 
         Args:
-            `config_dict` (`Mapping[str, Any]`): The configuration in a dictionary.
+            config_dict: Configuration containing optional JSON references.
+            base_uri: Base URI used to resolve relative references.
 
         Returns:
-            `Mapping[str, Any]`: The configuration Document Object Model.
+            The configuration with references replaced by plain values.
+
+        Raises:
+            ValueError: If the resolved configuration is not a mapping.
         """
         logger.debug("Resolving all the JSON Reference...")
 
@@ -139,7 +134,9 @@ class ConfigMate:
             f"All the JSON Reference for document {base_uri} successfully resolved as '{type(referenced_dict).__name__}'!"
         )
 
-        return referenced_dict  # type: ignore
+        if not isinstance(referenced_dict, Mapping):
+            raise ValueError("Resolved configuration must be a mapping.")
+        return referenced_dict
 
     def load_config_from_stream(
         self,
@@ -147,20 +144,20 @@ class ConfigMate:
         content_type: ContentType | str = ContentType.YAML,
         base_uri: str = "",
     ) -> Mapping[str, Any] | list[Mapping[str, Any]]:
-        """
-        Read YAML from a text stream and build a Config.
+        """Read configuration documents and resolve their JSON references.
 
         Args:
-            `config_stream` (`TextIOBase`): The stream where reading the configuration representation.
+            config_stream: Text stream containing the configuration.
+            content_type: Serialization format of the stream.
+            base_uri: Base URI used to resolve relative references.
 
         Returns:
-            `Mapping[str, Any]`: The configuration Document Object Model.
+            A configuration mapping, or a list for multiple documents.
+
+        Raises:
+            ValueError: If the format is unsupported or the content is empty.
         """
-        mime_type = (
-            content_type.value
-            if isinstance(content_type, ContentType)
-            else content_type
-        )
+        mime_type = content_type.value if isinstance(content_type, ContentType) else content_type
         logger.debug(f"Loading configuration from {mime_type} Input Stream...")
 
         handler = self._get_handler(content_type)
@@ -171,9 +168,7 @@ class ConfigMate:
 
         if isinstance(loaded, list):
             return [
-                self.load_config_from_dict(
-                    config_dict=current_loaded, base_uri=base_uri
-                )
+                self.load_config_from_dict(config_dict=current_loaded, base_uri=base_uri)
                 for current_loaded in loaded
             ]
 
@@ -185,14 +180,15 @@ class ConfigMate:
         content_type: ContentType = ContentType.YAML,
         base_uri: str = "",
     ) -> Mapping[str, Any] | list[Mapping[str, Any]]:
-        """
-        Read configuration from a string.
+        """Read configuration text and resolve its JSON references.
 
         Args:
-            `config_stream` (`TextIOBase`): The string where reading the configuration representation.
+            config_content: Serialized configuration text.
+            content_type: Serialization format of the text.
+            base_uri: Base URI used to resolve relative references.
 
         Returns:
-            `Mapping[str, Any]`: The configuration Document Object Model.
+            A configuration mapping, or a list for multiple documents.
         """
         logger.debug("Loading configuration from string content ...")
 
@@ -205,14 +201,16 @@ class ConfigMate:
     def load_config_from_location(
         self, config_location: str
     ) -> Mapping[str, Any] | list[Mapping[str, Any]]:
-        """
-        Read configuration from a local File System location or URL.
+        """Read a local file or URL and resolve its JSON references.
 
         Args:
-            `config_location` (`str`): The location on the Fyle System or the URL where reading the configuration YAML representation.
+            config_location: File path or URL to retrieve using the mounted adapters.
 
         Returns:
-            `Mapping[str, Any]`: The configuration Document Object Model.
+            A configuration mapping, or a list for multiple documents.
+
+        Raises:
+            ValueError: If the local file is missing or the format is unsupported.
         """
         if self._is_valid_url(config_location):
             logger.debug(f"> GET {config_location}...")
@@ -231,16 +229,12 @@ class ConfigMate:
             buffer: BytesIO | GzipFile
 
             if magic == b"\x1f\x8b":
-                logger.debug(
-                    f"gzip compression detected in response body from {config_location}"
-                )
+                logger.debug(f"gzip compression detected in response body from {config_location}")
                 buffer = GzipFile(fileobj=combined)
             else:
                 buffer = combined
 
-            logger.debug(
-                f"Reading content obtained from {config_location} response body..."
-            )
+            logger.debug(f"Reading content obtained from {config_location} response body...")
 
             content_type = response.headers.get(HTTPHeader.CONTENT_TYPE.value)
             if not content_type:
@@ -274,7 +268,8 @@ class ConfigMate:
         configuration: Mapping[str, Any] | list[Mapping[str, Any]],
         stream: TextIO,
         content_type: ContentType = ContentType.YAML,
-    ):
+    ) -> None:
+        """Write a configuration to a stream in the selected format."""
         handler = self._get_handler(content_type)
 
         handler.write(configuration, stream)

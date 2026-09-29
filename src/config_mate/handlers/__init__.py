@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+"""Define the stream interface for configuration formats."""
 
 from abc import abstractmethod
 from collections.abc import Mapping
@@ -21,12 +20,16 @@ from typing import Any, TextIO
 
 
 class StreamHandler:
+    """Read and write configuration documents through text streams."""
+
     @abstractmethod
-    def handle(self, stream: TextIO) -> Mapping[str, Any] | list[Mapping[str, Any]]:
+    def handle(self, stream: TextIO) -> Mapping[str, Any] | list[Mapping[str, Any]] | None:
+        """Read configuration documents, returning None for a null document."""
         pass
 
     @abstractmethod
     def write(
         self, configuration: Mapping[str, Any] | list[Mapping[str, Any]], stream: TextIO
     ) -> None:
+        """Write configuration documents to the supplied text stream."""
         pass

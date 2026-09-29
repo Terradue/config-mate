@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+"""Read and write XML configurations."""
 
 from collections.abc import Mapping
 from typing import Any, TextIO
@@ -25,14 +24,16 @@ from . import StreamHandler
 
 
 class XmlHandler(StreamHandler):
-    def handle(self, stream: TextIO) -> Mapping[str, Any] | list[Mapping[str, Any]]:
-        return xmltodict.parse(
-            stream.read(), encoding=DEFAULT_ENCODING, process_namespaces=True
-        )
+    """Read and write configuration documents through text streams."""
+
+    def handle(self, stream: TextIO) -> Mapping[str, Any]:
+        """Parse an XML document with namespace processing enabled."""
+        return xmltodict.parse(stream.read(), encoding=DEFAULT_ENCODING, process_namespaces=True)
 
     def write(
         self, configuration: Mapping[str, Any] | list[Mapping[str, Any]], stream: TextIO
     ) -> None:
+        """Write configuration documents to the supplied text stream."""
         xmltodict.unparse(
             input_dict={"configuration": configuration},
             output=stream,

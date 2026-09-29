@@ -2,7 +2,7 @@ site_name: Config Mate
 # site_url: not available
 site_author: Fabrice Brito, Simone Tripodi
 repo_url: https://git.terradue.com/scoop/config-mate/
-repo_name: scoop/config-mate
+repo_name: Terradue/config-mate
 
 theme:
   logo: imgs/icon-eoap.png

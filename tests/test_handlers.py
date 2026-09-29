@@ -16,6 +16,7 @@
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
 import json
+from collections.abc import Mapping
 from io import StringIO
 
 import pytest
@@ -26,7 +27,7 @@ from config_mate.handlers.xml_handler import XmlHandler
 from config_mate.handlers.yaml_handler import YamlHandler
 
 
-def test_json_handler_reads_and_writes_configuration():
+def test_json_handler_reads_and_writes_configuration() -> None:
     handler = JsonHandler()
     configuration = {"service": {"enabled": True}, "ports": [80, 443]}
 
@@ -37,12 +38,12 @@ def test_json_handler_reads_and_writes_configuration():
     assert json.loads(output.getvalue()) == configuration
 
 
-def test_json_handler_rejects_invalid_json():
+def test_json_handler_rejects_invalid_json() -> None:
     with pytest.raises(json.JSONDecodeError):
         JsonHandler().handle(StringIO("{invalid"))
 
 
-def test_yaml_handler_reads_all_documents():
+def test_yaml_handler_reads_all_documents() -> None:
     stream = StringIO("name: first\n---\nname: second\n")
 
     assert YamlHandler().handle(stream) == [
@@ -51,7 +52,7 @@ def test_yaml_handler_reads_all_documents():
     ]
 
 
-def test_yaml_handler_does_not_wrap_a_single_document_in_a_list():
+def test_yaml_handler_does_not_wrap_a_single_document_in_a_list() -> None:
     stream = StringIO("name: single\n")
 
     assert YamlHandler().handle(stream) == {"name": "single"}
@@ -64,7 +65,9 @@ def test_yaml_handler_does_not_wrap_a_single_document_in_a_list():
         [{"name": "first"}, {"name": "second"}],
     ],
 )
-def test_yaml_handler_writes_single_and_multiple_documents(configuration):
+def test_yaml_handler_writes_single_and_multiple_documents(
+    configuration: Mapping[str, object] | list[Mapping[str, object]],
+) -> None:
     output = StringIO()
 
     YamlHandler().write(configuration, output)
@@ -74,7 +77,7 @@ def test_yaml_handler_writes_single_and_multiple_documents(configuration):
     assert documents == expected
 
 
-def test_yaml_handler_does_not_serialize_shared_values_as_anchors_and_aliases():
+def test_yaml_handler_does_not_serialize_shared_values_as_anchors_and_aliases() -> None:
     shared = {"retries": 3}
     configuration = {"defaults": shared, "services": [shared, shared]}
     output = StringIO()
@@ -87,7 +90,7 @@ def test_yaml_handler_does_not_serialize_shared_values_as_anchors_and_aliases():
     assert list(YAML(typ="safe").load_all(rendered)) == [configuration]
 
 
-def test_yaml_handler_preserves_mapping_key_order():
+def test_yaml_handler_preserves_mapping_key_order() -> None:
     configuration = {
         "z-top": 1,
         "a-top": {
@@ -104,7 +107,7 @@ def test_yaml_handler_preserves_mapping_key_order():
     assert rendered.index("z-nested") < rendered.index("a-nested")
 
 
-def test_xml_handler_reads_document():
+def test_xml_handler_reads_document() -> None:
     configuration = XmlHandler().handle(
         StringIO("<service><name>api</name><port>8080</port></service>")
     )
@@ -112,7 +115,7 @@ def test_xml_handler_reads_document():
     assert configuration == {"service": {"name": "api", "port": "8080"}}
 
 
-def test_xml_handler_writes_configuration_document():
+def test_xml_handler_writes_configuration_document() -> None:
     output = StringIO()
 
     XmlHandler().write({"service": {"name": "api"}}, output)
@@ -122,3 +125,8 @@ def test_xml_handler_writes_configuration_document():
     assert XmlHandler().handle(StringIO(rendered)) == {
         "configuration": {"service": {"name": "api"}}
     }
+
+
+@pytest.mark.parametrize("handler", [JsonHandler(), YamlHandler()])
+def test_handlers_return_none_for_null_documents(handler: JsonHandler | YamlHandler) -> None:
+    assert handler.handle(StringIO("null")) is None

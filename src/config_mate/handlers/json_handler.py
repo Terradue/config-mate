@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+"""Read and write JSON configurations."""
 
 import json
 from collections.abc import Mapping
@@ -23,10 +22,15 @@ from . import StreamHandler
 
 
 class JsonHandler(StreamHandler):
-    def handle(self, stream: TextIO) -> Mapping[str, Any] | list[Mapping[str, Any]]:
-        return json.load(stream)
+    """Read and write configuration documents through text streams."""
+
+    def handle(self, stream: TextIO) -> Mapping[str, Any] | list[Mapping[str, Any]] | None:
+        """Read configuration documents, returning None for a null document."""
+        configuration: Mapping[str, Any] | list[Mapping[str, Any]] | None = json.load(stream)
+        return configuration
 
     def write(
         self, configuration: Mapping[str, Any] | list[Mapping[str, Any]], stream: TextIO
     ) -> None:
+        """Write configuration documents to the supplied text stream."""
         json.dump(configuration, stream, indent=True)
