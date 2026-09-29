@@ -9,7 +9,7 @@ embedding the details of every URI scheme or document format.
 The implementation is deliberately small:
 
 ```text
-src/config_mate/
+src/ref_bundle/
 ├── __init__.py
 ├── main.py
 └── handlers/
@@ -19,11 +19,11 @@ src/config_mate/
     └── yaml_handler.py
 ```
 
-- `config_mate.__init__` defines the `ConfigMate` facade and the load,
+- `ref_bundle.__init__` defines the `ConfigMate` facade and the load,
   resolution, and dump pipeline.
-- `config_mate.main` defines the Click command, configures transport adapters,
+- `ref_bundle.main` defines the Click command, configures transport adapters,
   and directs output to a file or standard output.
-- `config_mate.handlers` defines the serialization abstraction and the
+- `ref_bundle.handlers` defines the serialization abstraction and the
   built-in JSON, YAML, and XML implementations.
 - `session-adapters` supplies the file, S3, OCI, and authenticated HTTP
   transport adapters used by the CLI.

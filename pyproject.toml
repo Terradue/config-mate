@@ -17,15 +17,21 @@ requires = ["hatchling>=1.32.4"]
 build-backend = "hatchling.build"
 
 [project]
-name = "config-mate"
+name = "ref-bundle"
 dynamic = ["version"]
-description = 'Library to recursively read YAML/JSON/XML configurations with JSON Reference'
+description = 'Assemble modular YAML/JSON/XML configuration through recursive JSON Reference `$ref` resolution'
 
 readme = "README.md"
 requires-python = ">=3.10"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
-keywords = []
+keywords = [
+  "$ref",
+  "JSON Reference",
+  "YAML",
+  "JSON",
+  "XML"
+]
 authors = [
   { name = "Fabrice Brito", email = "info@terradue.com" },
   { name = "Simone Tripodi", email = "info@terradue.com"}
@@ -56,20 +62,20 @@ dependencies = [
 # ---------------------------------------------------------------------------
 
 [project.urls]
-Documentation = "https://terradue.github.io/config-mate/"
-Issues = "https://github.com/Terradue/config-mate/issues"
-Source = "https://github.com/Terradue/config-mate"
-Changelog = "https://github.com/Terradue/config-mate/blob/main/CHANGELOG.md"
+Documentation = "https://terradue.github.io/ref-bundle/"
+Issues = "https://github.com/Terradue/ref-bundle/issues"
+Source = "https://github.com/Terradue/ref-bundle"
+Changelog = "https://github.com/Terradue/ref-bundle/blob/main/CHANGELOG.md"
 
 [project.scripts]
-config-mate = "config_mate.main:main"
+ref-bundle = "ref_bundle.main:main"
 
 # ---------------------------------------------------------------------------
 # Versioning and packaging
 # ---------------------------------------------------------------------------
 
 [tool.hatch.version]
-path = "src/config_mate/__about__.py"
+path = "src/ref_bundle/__about__.py"
 
 [tool.hatch.build.targets.sdist]
 include = [
@@ -85,24 +91,24 @@ include = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/config_mate"]
+packages = ["src/ref_bundle"]
 
 # ---------------------------------------------------------------------------
 # Coverage
 # ---------------------------------------------------------------------------
 
 [tool.coverage.run]
-source_pkgs = ["config_mate/api", "tests"]
+source_pkgs = ["ref_bundle/api", "tests"]
 branch = true
 parallel = true
 omit = [
-  "src/config_mate/__about__.py",
+  "src/ref_bundle/__about__.py",
 ]
 
 [tool.coverage.paths]
-config_mate_api = [
-  "src/config_mate/api",
-  "*/transpiler-mate-api/src/config_mate/api"
+ref_bundle_api = [
+  "src/ref_bundle/api",
+  "*/transpiler-mate-api/src/ref_bundle/api"
 ]
 
 [tool.coverage.report]
@@ -130,7 +136,7 @@ dependencies = [
 [tool.hatch.envs.test.scripts]
 test = "pytest {args:tests}"
 testv = "pytest --verbose {args:tests}"
-test-cov = "pytest --cov=config_mate/api --cov-report=term-missing --cov-report=xml:coverage.xml {args:tests}"
+test-cov = "pytest --cov=ref_bundle/api --cov-report=term-missing --cov-report=xml:coverage.xml {args:tests}"
 test-show-setup = "pytest --setup-show {args:tests}"
 
 [[tool.hatch.envs.test.matrix]]
@@ -242,7 +248,7 @@ max-statements = 40
 
 [tool.mypy]
 
-# Resolve the config_mate namespace package from the src layout.
+# Resolve the ref_bundle namespace package from the src layout.
 mypy_path = ["$MYPY_CONFIG_FILE_DIR/src", "$MYPY_CONFIG_FILE_DIR/typings"]
 explicit_package_bases = true
 
@@ -260,7 +266,7 @@ ignore_missing_imports = false
 
 # Files checked by default.
 files = [
-  "src/config_mate",
+  "src/ref_bundle",
   "tests",
 ]
 

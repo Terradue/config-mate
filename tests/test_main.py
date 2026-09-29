@@ -28,8 +28,8 @@ from click.testing import CliRunner
 from session_adapters.conainers_auth import ContainersAuth
 from session_adapters.http_conts import ContentType
 
-import config_mate.main as main_module
-from config_mate.main import main
+import ref_bundle.main as main_module
+from ref_bundle.main import main
 
 Adapter: TypeAlias = tuple[str, tuple[object, ...], dict[str, object]]
 
@@ -86,7 +86,7 @@ def cli_dependencies(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict[st
 
         return create
 
-    monkeypatch.setattr(main_module, "ConfigMate", FakeConfigMate)
+    monkeypatch.setattr(main_module, "RefBundle", FakeConfigMate)
     for name in (
         "HTTPAdapter",
         "BearerAuthHTTPAdapter",
