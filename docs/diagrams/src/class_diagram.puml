@@ -5,7 +5,7 @@ class JsonRef {
     +replace_refs(config: Mapping, loader: Callable): Mapping
 }
 
-class ConfigMate{
+class RefBundle{
     session: Session
     handlers: dict[ContentType | str, StreamHandler]
 
@@ -18,12 +18,12 @@ class ConfigMate{
     +dump_config(configuration: Mapping or list, stream: TextIO, content_type: ContentType = YAML)
 }
 
-ConfigMate -u--> FileAdapter
-ConfigMate -u--> OCIAdapter
-ConfigMate -u--> S3Adapter
-ConfigMate -u--> HTTPAdapter
-ConfigMate -l-> JsonRef
-ConfigMate -d-> ContentType
+RefBundle -u--> FileAdapter
+RefBundle -u--> OCIAdapter
+RefBundle -u--> S3Adapter
+RefBundle -u--> HTTPAdapter
+RefBundle -l-> JsonRef
+RefBundle -d-> ContentType
 
 package "handlers" {
     abstract class StreamHandler {
@@ -47,9 +47,9 @@ package "handlers" {
     }
 }
 
-ConfigMate -r-> StreamHandler
-ConfigMate -r-> JsonHandler
-ConfigMate -r-> XmlHandler
-ConfigMate -r-> YamlHandler
+RefBundle -r-> StreamHandler
+RefBundle -r-> JsonHandler
+RefBundle -r-> XmlHandler
+RefBundle -r-> YamlHandler
 
 @enduml

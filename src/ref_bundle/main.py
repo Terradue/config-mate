@@ -30,7 +30,7 @@ from session_adapters.http_conts import ContentType
 from session_adapters.oci_adapter import OCIAdapter
 from session_adapters.s3_adapter import S3Adapter
 
-from . import ConfigMate
+from . import RefBundle
 
 
 def _default_authfile() -> Path:
@@ -68,7 +68,7 @@ def _default_authfile() -> Path:
     help="Path of the managed registry credentials file",
     envvar="REGISTRY_AUTH_FILE",
     show_envvar=True,
-    default=_default_authfile,
+    default=_default_authfile(),
     show_default=True,
     required=False,
     type=click.Path(path_type=Path),
@@ -108,19 +108,19 @@ def main(  # noqa: PLR0913
         case _:
             raise ValueError(f"'{ext}' not supported (yet), please stay tuned.")
 
-    config_mate = _create_config_mate(
+    ref_bundle = _create_ref_bundle(
         oci_hostname, oci_username, oci_password, authfile, oauth2_bearer
     )
 
     try:
-        config_dict = config_mate.load_config_from_location(config)
+        config_dict = ref_bundle.load_config_from_location(config)
 
         if output:
             logger.info(f"Saving the new Configuration to {output}...")
 
             output.parent.mkdir(parents=True, exist_ok=True)
             with output.open("w") as output_stream:
-                config_mate.dump_config(
+                ref_bundle.dump_config(
                     configuration=config_dict,
                     stream=output_stream,
                     content_type=content_type,
@@ -128,7 +128,7 @@ def main(  # noqa: PLR0913
 
             logger.info(f"New Configuration successfully saved to {output}!")
         else:
-            config_mate.dump_config(
+            ref_bundle.dump_config(
                 configuration=config_dict, stream=sys.stdout, content_type=content_type
             )
 
@@ -152,21 +152,21 @@ def main(  # noqa: PLR0913
         sys.exit(exit_code)
 
 
-def _create_config_mate(
+def _create_ref_bundle(
     oci_hostname: str | None,
     oci_username: str | None,
     oci_password: str | None,
     authfile: Path | None,
     oauth2_bearer: str | None,
-) -> ConfigMate:
+) -> RefBundle:
     """Mount the CLI transports with the supplied authentication settings."""
-    config_mate = ConfigMate()
+    ref_bundle = RefBundle()
 
     http_adapter = BearerAuthHTTPAdapter(oauth2_bearer) if oauth2_bearer else HTTPAdapter()
-    config_mate.mount_session("http://", http_adapter)
-    config_mate.mount_session("https://", http_adapter)
-    config_mate.mount_session("file://", FileAdapter())
-    config_mate.mount_session("s3://", S3Adapter())
+    ref_bundle.mount_session("http://", http_adapter)
+    ref_bundle.mount_session("https://", http_adapter)
+    ref_bundle.mount_session("file://", FileAdapter())
+    ref_bundle.mount_session("s3://", S3Adapter())
 
     containers_auth = (
         ContainersAuth.get_instance(authfile)
@@ -177,6 +177,6 @@ def _create_config_mate(
     if oci_hostname and oci_username and oci_password:
         containers_auth.add_auth(oci_hostname, oci_username, oci_password)
 
-    config_mate.mount_session("oci://", OCIAdapter(containers_auth))
+    ref_bundle.mount_session("oci://", OCIAdapter(containers_auth))
 
-    return config_mate
+    return ref_bundle

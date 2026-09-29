@@ -20,13 +20,6 @@ config-mate config.yaml --ext json --output build/config.json
 
 ## Options
 
-!!! warning "Available from version 1.2.0: registry credentials files"
-
-    Support for the
-    [containers-auth.json format](https://man.archlinux.org/man/containers-auth.json.5)
-    is available from **1.2.0**. Use `--authfile` to select a credentials file
-    when accessing OCI sources.
-
 | Option | Value | Default | Description |
 | --- | --- | --- | --- |
 | `--ext` | `json`, `yaml`, or `xml` | `yaml` | Serialization format of the collected output. The match is case-insensitive. |
@@ -34,7 +27,7 @@ config-mate config.yaml --ext json --output build/config.json
 | `--oci-hostname` | text | `OCI_HOSTNAME` | Hostname used by the OCI transport adapter. |
 | `--oci-username` | text | `OCI_USERNAME` | Username used by the OCI transport adapter. |
 | `--oci-password` | text | `OCI_PASSWORD` | Password used by the OCI transport adapter. |
-| `--authfile` | path | `${XDG_RUNTIME_DIR}/containers/auth.json` | `REGISTRY_AUTH_FILE` |
+| `--authfile` | path | `${XDG_RUNTIME_DIR}/containers/auth.json` following up on `REGISTRY_AUTH_FILE` | Path of the managed registry credentials file |
 | `--oauth2-bearer` | text | `OAUTH2_BEARER` | Bearer token sent for HTTP and HTTPS requests. |
 | `--help` | — | — | Show command help and exit. |
 
@@ -76,7 +69,7 @@ the CLI:
 | OCI | `oci://registry.example.org/team/root.yaml` | Uses the OCI options or their environment-variable equivalents. |
 
 Input may be YAML, JSON, or XML. For remote inputs, the response
-`Content-Type` selects the parser; when that header is absent, Config Mate
+`Content-Type` selects the parser; when that header is absent, Ref Bundle
 assumes YAML. Gzip-compressed response bodies are detected and decompressed.
 
 See the [`$ref` reference](json-reference.md) for fragments and relative

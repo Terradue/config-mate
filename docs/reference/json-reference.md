@@ -1,6 +1,6 @@
 # `$ref` reference
 
-Config Mate recognizes JSON Reference objects in JSON, YAML, and XML-derived
+Ref Bundle recognizes JSON Reference objects in JSON, YAML, and XML-derived
 data. A reference object contains a `$ref` whose value is a URI reference:
 
 ```yaml
@@ -67,7 +67,7 @@ $ref: "#/content/application~1json"
 - References are resolved recursively.
 - Resolved values are emitted as ordinary values rather than `$ref` proxy
   objects.
-- Config Mate merges sibling properties beside `$ref` into a referenced
+- Ref Bundle merges sibling properties beside `$ref` into a referenced
   mapping. This is a non-standard extension and other JSON Reference tools
   may ignore those siblings. Prefer a separately named component when the
   source must remain portable.

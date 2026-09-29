@@ -15,6 +15,7 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
+import importlib.util
 import json
 import sys
 from base64 import b64decode, b64encode
@@ -28,16 +29,16 @@ from click.testing import CliRunner
 from session_adapters.conainers_auth import ContainersAuth
 from session_adapters.http_conts import ContentType
 
-import config_mate.main as main_module
-from config_mate.main import main
+import ref_bundle.main as main_module
+from ref_bundle.main import main
 
 Adapter: TypeAlias = tuple[str, tuple[object, ...], dict[str, object]]
 
 
-class FakeConfigMate:
+class FakeRefBundle:
     """Record CLI transport registration and configuration rendering."""
 
-    instances: ClassVar[list["FakeConfigMate"]] = []
+    instances: ClassVar[list["FakeRefBundle"]] = []
 
     def __init__(self) -> None:
         self.mounts: list[tuple[str, Adapter]] = []
@@ -75,7 +76,14 @@ def cli_dependencies(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict[st
         monkeypatch.delenv(variable, raising=False)
     monkeypatch.setenv("XDG_RUNTIME_DIR", str(tmp_path / "runtime"))
     monkeypatch.setattr(Path, "home", lambda: tmp_path / "home")
-    FakeConfigMate.instances.clear()
+    # Import under the isolated environment so Click captures a safe default path.
+    spec = importlib.util.spec_from_file_location("ref_bundle.main", main_module.__file__)
+    assert spec is not None and spec.loader is not None
+    isolated_main = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(isolated_main)
+    monkeypatch.setattr(sys.modules[__name__], "main_module", isolated_main)
+    monkeypatch.setattr(sys.modules[__name__], "main", isolated_main.main)
+    FakeRefBundle.instances.clear()
     adapters: dict[str, Adapter] = {}
 
     def adapter_factory(name: str) -> Callable[..., Adapter]:
@@ -86,7 +94,7 @@ def cli_dependencies(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict[st
 
         return create
 
-    monkeypatch.setattr(main_module, "ConfigMate", FakeConfigMate)
+    monkeypatch.setattr(main_module, "RefBundle", FakeRefBundle)
     for name in (
         "HTTPAdapter",
         "BearerAuthHTTPAdapter",
@@ -106,7 +114,7 @@ def test_cli_renders_to_stdout_and_mounts_default_adapters(
 
     assert result.exit_code == 0
     assert result.stdout == "rendered"
-    mate = FakeConfigMate.instances[0]
+    mate = FakeRefBundle.instances[0]
     assert mate.loaded_from == "config.yaml"
     assert mate.dumped == ({"loaded": "config.yaml"}, ContentType.JSON)
     assert [scheme for scheme, _adapter in mate.mounts] == [
@@ -124,7 +132,7 @@ def test_cli_uses_yaml_output_by_default(cli_dependencies: dict[str, Adapter]) -
     result = CliRunner().invoke(main, ["config.yaml"])
 
     assert result.exit_code == 0
-    assert FakeConfigMate.instances[0].dumped == (
+    assert FakeRefBundle.instances[0].dumped == (
         {"loaded": "config.yaml"},
         ContentType.YAML,
     )
@@ -156,7 +164,7 @@ def test_cli_writes_output_and_configures_credentials(
     assert result.exit_code == 0
     assert result.stdout == ""
     assert output.read_text() == "rendered"
-    mate = FakeConfigMate.instances[0]
+    mate = FakeRefBundle.instances[0]
     assert mate.dumped == ({"loaded": "remote.yaml"}, ContentType.XML)
     assert cli_dependencies["BearerAuthHTTPAdapter"][1] == ("token",)
     containers_auth = cli_dependencies["OCIAdapter"][1][0]
@@ -185,15 +193,15 @@ def test_cli_exits_with_failure_when_loading_fails(
     cli_dependencies: dict[str, Adapter],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def fail_loading(self: FakeConfigMate, location: str) -> Mapping[str, object]:
+    def fail_loading(self: FakeRefBundle, location: str) -> Mapping[str, object]:
         raise ValueError("Configuration could not be loaded")
 
-    monkeypatch.setattr(FakeConfigMate, "load_config_from_location", fail_loading)
+    monkeypatch.setattr(FakeRefBundle, "load_config_from_location", fail_loading)
     result = CliRunner().invoke(main, ["config.yaml"])
 
     assert result.exit_code == 1
     assert result.stdout == ""
-    assert FakeConfigMate.instances[0].dumped is None
+    assert FakeRefBundle.instances[0].dumped is None
 
 
 @pytest.mark.parametrize(
@@ -230,7 +238,6 @@ def test_cli_loads_authfile_with_option_environment_default_precedence(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # The command has already been imported, so this also checks lazy defaults.
     default_authfile = main_module._default_authfile()
     environment_authfile = tmp_path / "environment.json"
     option_authfile = tmp_path / "option.json"
@@ -254,6 +261,37 @@ def test_cli_loads_authfile_with_option_environment_default_precedence(
     assert isinstance(containers_auth, ContainersAuth)
     assert containers_auth.auths is not None
     assert set(containers_auth.auths) == {f"{source}.test"}
+
+
+def test_cli_help_shows_resolved_authfile_default(
+    cli_dependencies: dict[str, Adapter],
+) -> None:
+    default_authfile = main_module._default_authfile()
+
+    result = CliRunner().invoke(main, ["--help"], terminal_width=300)
+
+    assert result.exit_code == 0
+    assert f"default: {default_authfile}]" in result.output
+
+
+def test_cli_keeps_authfile_default_resolved_at_import(
+    cli_dependencies: dict[str, Adapter],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    default_authfile = main_module._default_authfile()
+    default_authfile.parent.mkdir(parents=True, exist_ok=True)
+    default_authfile.write_text(json.dumps({"auths": {"default.test": {"auth": "dXNlcjpwYXNz"}}}))
+    monkeypatch.setenv("XDG_RUNTIME_DIR", str(tmp_path / "changed-runtime"))
+    monkeypatch.setattr(Path, "home", lambda: tmp_path / "changed-home")
+
+    result = CliRunner().invoke(main, ["config.yaml"])
+
+    assert result.exit_code == 0, result.output
+    containers_auth = cli_dependencies["OCIAdapter"][1][0]
+    assert isinstance(containers_auth, ContainersAuth)
+    assert containers_auth.auths is not None
+    assert set(containers_auth.auths) == {"default.test"}
 
 
 @pytest.mark.parametrize("authfile_option", [True, False])
@@ -352,7 +390,7 @@ def test_cli_rejects_invalid_authfile_before_constructing_oci_adapter(
     assert result.exit_code == 1
     assert result.exception is not None
     assert "OCIAdapter" not in cli_dependencies
-    assert FakeConfigMate.instances[0].loaded_from is None
+    assert FakeRefBundle.instances[0].loaded_from is None
 
 
 def test_command_callback_accepts_absent_authfile(cli_dependencies: dict[str, Adapter]) -> None:

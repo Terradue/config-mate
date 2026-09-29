@@ -1,12 +1,12 @@
 # Bundle your first configuration
 
-This tutorial creates two small YAML files and uses Config Mate to collect
+This tutorial creates two small YAML files and uses Ref Bundle to collect
 them into one deployable file.
 
 ## Before you begin
 
 You need Python 3.10 or newer and access to the package registry that provides
-Config Mate. Install the package in a virtual environment:
+Ref Bundle. Install the package in a virtual environment:
 
 ```console
 python -m pip install config-mate
@@ -62,7 +62,7 @@ Run:
 config-mate config.yaml
 ```
 
-Because no output path or format was specified, Config Mate writes YAML to
+Because no output path or format was specified, Ref Bundle writes YAML to
 standard output. The collected document includes the component in place of
 the reference:
 
@@ -87,7 +87,7 @@ Create a JSON bundle:
 config-mate config.yaml --ext json --output build/config.json
 ```
 
-Config Mate creates the `build` directory if needed. `build/config.json` is a
+Ref Bundle creates the `build` directory if needed. `build/config.json` is a
 single file and no longer requires `components/runtimes.yaml` at runtime.
 
 You have now separated the maintainable source configuration from its

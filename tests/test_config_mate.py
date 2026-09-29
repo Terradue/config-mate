@@ -26,11 +26,11 @@ import pytest
 from requests.adapters import BaseAdapter
 from session_adapters.http_conts import ContentType
 
-from config_mate import ConfigMate
-from config_mate.handlers import StreamHandler
-from config_mate.handlers.json_handler import JsonHandler
-from config_mate.handlers.xml_handler import XmlHandler
-from config_mate.handlers.yaml_handler import YamlHandler
+from ref_bundle import RefBundle
+from ref_bundle.handlers import StreamHandler
+from ref_bundle.handlers.json_handler import JsonHandler
+from ref_bundle.handlers.xml_handler import XmlHandler
+from ref_bundle.handlers.yaml_handler import YamlHandler
 
 
 class StubResponse:
@@ -65,7 +65,7 @@ class EchoHandler(StreamHandler):
 
 
 def test_default_handlers_are_registered_for_supported_aliases() -> None:
-    mate = ConfigMate()
+    mate = RefBundle()
 
     assert isinstance(mate._get_handler(ContentType.JSON), JsonHandler)
     assert mate._get_handler(ContentType.JSON) is mate._get_handler(ContentType.PROBLEM_JSON)
@@ -77,7 +77,7 @@ def test_default_handlers_are_registered_for_supported_aliases() -> None:
 
 
 def test_custom_handler_can_be_mounted_and_used_for_load_and_dump() -> None:
-    mate = ConfigMate()
+    mate = RefBundle()
     mate.mount_handler(ContentType.CSV, EchoHandler())
 
     assert mate.load_config_from_content("example", ContentType.CSV) == {"value": "example"}
@@ -89,11 +89,11 @@ def test_custom_handler_can_be_mounted_and_used_for_load_and_dump() -> None:
 
 def test_unregistered_content_type_is_rejected() -> None:
     with pytest.raises(ValueError, match="text/html can not be handled"):
-        ConfigMate()._get_handler(ContentType.HTML)
+        RefBundle()._get_handler(ContentType.HTML)
 
 
 def test_session_adapter_can_be_mounted() -> None:
-    mate = ConfigMate()
+    mate = RefBundle()
     adapter = Mock(spec=BaseAdapter)
 
     mate.mount_session("custom://", adapter)
@@ -110,16 +110,16 @@ def test_session_adapter_can_be_mounted() -> None:
     ],
 )
 def test_url_detection(location: str, expected: str) -> None:
-    assert ConfigMate()._is_valid_url(location) == expected
+    assert RefBundle()._is_valid_url(location) == expected
 
 
 def test_url_detection_returns_false_when_parsing_fails(monkeypatch: pytest.MonkeyPatch) -> None:
     def fail(_location: str) -> NoReturn:
         raise ValueError("bad URL")
 
-    monkeypatch.setattr("config_mate.urlparse", fail)
+    monkeypatch.setattr("ref_bundle.urlparse", fail)
 
-    assert ConfigMate()._is_valid_url("anything") is False
+    assert RefBundle()._is_valid_url("anything") is False
 
 
 def test_load_dict_resolves_internal_json_references_to_plain_values() -> None:
@@ -128,14 +128,14 @@ def test_load_dict_resolves_internal_json_references_to_plain_values() -> None:
         "service": {"$ref": "#/definitions/defaults"},
     }
 
-    loaded = ConfigMate().load_config_from_dict(source)
+    loaded = RefBundle().load_config_from_dict(source)
 
     assert loaded["service"] == {"retries": 3}
     assert type(loaded["service"]) is dict
 
 
 def test_load_content_selects_handler_and_resolves_references() -> None:
-    loaded = ConfigMate().load_config_from_content(
+    loaded = RefBundle().load_config_from_content(
         '{"definitions": {"port": 8080}, "port": {"$ref": "#/definitions/port"}}',
         ContentType.JSON,
         base_uri="https://example.test/config.json",
@@ -147,7 +147,7 @@ def test_load_content_selects_handler_and_resolves_references() -> None:
 
 
 def test_resolved_references_are_dumped_to_yaml_without_anchors_or_aliases() -> None:
-    mate = ConfigMate()
+    mate = RefBundle()
     loaded = mate.load_config_from_content(
         """
 defaults:
@@ -172,7 +172,7 @@ services:
 
 def test_empty_json_content_is_rejected() -> None:
     with pytest.raises(ValueError, match="application/json content is empty"):
-        ConfigMate().load_config_from_content("null", ContentType.JSON)
+        RefBundle().load_config_from_content("null", ContentType.JSON)
 
 
 @pytest.mark.parametrize(
@@ -188,7 +188,7 @@ def test_load_url_uses_response_content_type_or_yaml_default(
     expected: Mapping[str, object],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    mate = ConfigMate()
+    mate = RefBundle()
     response = StubResponse(body, content_type)
     get_response = Mock(return_value=response)
     monkeypatch.setattr(mate.session, "get", get_response)
@@ -203,7 +203,7 @@ def test_load_url_uses_response_content_type_or_yaml_default(
 def test_external_yaml_references_resolve_to_documents_not_document_arrays(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    mate = ConfigMate()
+    mate = RefBundle()
     referenced_documents = {
         "https://example.test/stage-in.cwl": b"class: CommandLineTool\nid: stage-in\n",
         "https://example.test/workflow.cwl": b"class: Workflow\nid: workflow\n",
@@ -237,7 +237,7 @@ workflows:
 
 
 def test_load_url_decompresses_gzip_content(monkeypatch: pytest.MonkeyPatch) -> None:
-    mate = ConfigMate()
+    mate = RefBundle()
     response = StubResponse(
         gzip.compress(b'{"compressed": true}'),
         "application/json",
@@ -249,7 +249,7 @@ def test_load_url_decompresses_gzip_content(monkeypatch: pytest.MonkeyPatch) -> 
 
 
 def test_load_url_rejects_unknown_content_type(monkeypatch: pytest.MonkeyPatch) -> None:
-    mate = ConfigMate()
+    mate = RefBundle()
     monkeypatch.setattr(
         mate.session, "get", Mock(return_value=StubResponse(b"value", "application/octet-stream"))
     )
@@ -263,7 +263,7 @@ def test_local_file_is_converted_to_file_url(
 ) -> None:
     config_file = tmp_path / "config.yaml"
     config_file.write_text("name: local\n")
-    mate = ConfigMate()
+    mate = RefBundle()
     original_load = mate.load_config_from_location
     delegated = Mock(return_value={"loaded": True})
 
@@ -283,10 +283,10 @@ def test_missing_local_file_is_rejected(tmp_path: Path) -> None:
     missing = tmp_path / "missing.yaml"
 
     with pytest.raises(ValueError, match="resource does not exist"):
-        ConfigMate().load_config_from_location(str(missing))
+        RefBundle().load_config_from_location(str(missing))
 
 
 @pytest.mark.parametrize("value", [42, ["item"]])
 def test_load_dict_rejects_references_resolving_to_non_mapping_roots(value: object) -> None:
     with pytest.raises(ValueError, match="Resolved configuration must be a mapping"):
-        ConfigMate().load_config_from_dict({"$ref": "#/value", "value": value})
+        RefBundle().load_config_from_dict({"$ref": "#/value", "value": value})

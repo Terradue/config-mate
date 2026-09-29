@@ -34,7 +34,7 @@ from .handlers.yaml_handler import YamlHandler
 
 
 @final
-class ConfigMate:
+class RefBundle:
     """Resolve configuration references using registered transports and formats.
 
     Attributes:

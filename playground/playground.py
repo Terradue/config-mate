@@ -15,14 +15,14 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
-from config_mate import ConfigMate
+from ref_bundle import RefBundle
 from code_editor import code_editor
 from io import StringIO
 import streamlit as st
 import json
 import os
 
-st.header("Config Mate playground")
+st.header("Ref Bundle playground")
 st.set_page_config(layout="wide")
 
 btn_settings_editor_btns = [
@@ -61,7 +61,7 @@ focus = False
 wrap = True
 btns = custom_buttons_alt
 
-config_mate = ConfigMate()
+ref_bundle = RefBundle()
 example_configuration = """
 version: '1.0.0'
 
@@ -236,9 +236,9 @@ if response_dict["type"] == "submit":
     config_content = response_dict["text"]
 
     try:
-        configuration = config_mate.load_config_from_content(config_content)
+        configuration = ref_bundle.load_config_from_content(config_content)
         out = StringIO()
-        config_mate.dump_config(configuration, out)
+        ref_bundle.dump_config(configuration, out)
 
         st.badge("Success", icon=":material/check:", color="green")
         st.subheader("Referenced and parsed configuration")

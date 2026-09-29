@@ -22,9 +22,9 @@ from io import StringIO
 import pytest
 from ruamel.yaml import YAML
 
-from config_mate.handlers.json_handler import JsonHandler
-from config_mate.handlers.xml_handler import XmlHandler
-from config_mate.handlers.yaml_handler import YamlHandler
+from ref_bundle.handlers.json_handler import JsonHandler
+from ref_bundle.handlers.xml_handler import XmlHandler
+from ref_bundle.handlers.yaml_handler import YamlHandler
 
 
 def test_json_handler_reads_and_writes_configuration() -> None:
