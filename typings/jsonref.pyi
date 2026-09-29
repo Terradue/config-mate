@@ -1,4 +1,5 @@
 """Reference resolution interface from jsonref 1.1.0."""
+
 from collections.abc import Callable
 
 def replace_refs(
