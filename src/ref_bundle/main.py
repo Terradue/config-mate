@@ -68,7 +68,7 @@ def _default_authfile() -> Path:
     help="Path of the managed registry credentials file",
     envvar="REGISTRY_AUTH_FILE",
     show_envvar=True,
-    default=_default_authfile,
+    default=_default_authfile(),
     show_default=True,
     required=False,
     type=click.Path(path_type=Path),
