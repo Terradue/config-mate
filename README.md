@@ -2,6 +2,8 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/config-mate.svg)](https://pypi.org/project/config-mate)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/config-mate.svg)](https://pypi.org/project/config-mate)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/Terradue/config-mate/package.yaml?branch=develop&event=push&label=build&logo=githubactions)](https://github.com/Terradue/config-mate/actions/workflows/package.yaml?query=branch%3Adevelop)
+[![Code coverage](https://img.shields.io/codecov/c/github/Terradue/config-mate/develop?logo=codecov)](https://app.codecov.io/gh/Terradue/config-mate/tree/develop)
 
 Config Mate recursively resolves JSON References (`$ref`) across JSON, YAML,
 and XML configuration and writes one self-contained JSON, YAML, or XML
