@@ -16,7 +16,10 @@
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
 import gzip
+from collections.abc import Mapping
 from io import BytesIO, StringIO
+from pathlib import Path
+from typing import NoReturn, TextIO
 from unittest.mock import Mock
 
 import pytest
@@ -36,7 +39,7 @@ class StubResponse:
         body: bytes,
         content_type: str | None = None,
         status_code: int = 200,
-    ):
+    ) -> None:
         self.raw = BytesIO(body)
         self.headers = {}
         if content_type is not None:
@@ -47,48 +50,49 @@ class StubResponse:
 
 
 class EchoHandler(StreamHandler):
-    def handle(self, stream):
+    def handle(self, stream: TextIO) -> Mapping[str, object]:
+        """Read the input text into a configuration value."""
         return {"value": stream.read()}
 
-    def write(self, configuration, stream):
-        stream.write(configuration["value"])
+    def write(
+        self, configuration: Mapping[str, object] | list[Mapping[str, object]], stream: TextIO
+    ) -> None:
+        """Write the configuration value as text."""
+        assert isinstance(configuration, Mapping)
+        value = configuration["value"]
+        assert isinstance(value, str)
+        stream.write(value)
 
 
-def test_default_handlers_are_registered_for_supported_aliases():
+def test_default_handlers_are_registered_for_supported_aliases() -> None:
     mate = ConfigMate()
 
     assert isinstance(mate._get_handler(ContentType.JSON), JsonHandler)
-    assert mate._get_handler(ContentType.JSON) is mate._get_handler(
-        ContentType.PROBLEM_JSON
-    )
-    assert mate._get_handler(ContentType.JSON) is mate._get_handler(
-        ContentType.SCHEMA_JSON
-    )
+    assert mate._get_handler(ContentType.JSON) is mate._get_handler(ContentType.PROBLEM_JSON)
+    assert mate._get_handler(ContentType.JSON) is mate._get_handler(ContentType.SCHEMA_JSON)
     assert isinstance(mate._get_handler(ContentType.XML), XmlHandler)
     assert mate._get_handler(ContentType.XML) is mate._get_handler(ContentType.XML_TEXT)
     assert isinstance(mate._get_handler(ContentType.YAML), YamlHandler)
     assert mate._get_handler(ContentType.YAML) is mate._get_handler(ContentType.PLAIN)
 
 
-def test_custom_handler_can_be_mounted_and_used_for_load_and_dump():
+def test_custom_handler_can_be_mounted_and_used_for_load_and_dump() -> None:
     mate = ConfigMate()
     mate.mount_handler(ContentType.CSV, EchoHandler())
 
-    assert mate.load_config_from_content("example", ContentType.CSV) == {
-        "value": "example"
-    }
+    assert mate.load_config_from_content("example", ContentType.CSV) == {"value": "example"}
 
     output = StringIO()
     mate.dump_config({"value": "rendered"}, output, ContentType.CSV)
     assert output.getvalue() == "rendered"
 
 
-def test_unregistered_content_type_is_rejected():
+def test_unregistered_content_type_is_rejected() -> None:
     with pytest.raises(ValueError, match="text/html can not be handled"):
         ConfigMate()._get_handler(ContentType.HTML)
 
 
-def test_session_adapter_can_be_mounted():
+def test_session_adapter_can_be_mounted() -> None:
     mate = ConfigMate()
     adapter = Mock(spec=BaseAdapter)
 
@@ -105,12 +109,12 @@ def test_session_adapter_can_be_mounted():
         ("relative/config.yaml", ""),
     ],
 )
-def test_url_detection(location, expected):
+def test_url_detection(location: str, expected: str) -> None:
     assert ConfigMate()._is_valid_url(location) == expected
 
 
-def test_url_detection_returns_false_when_parsing_fails(monkeypatch):
-    def fail(_location):
+def test_url_detection_returns_false_when_parsing_fails(monkeypatch: pytest.MonkeyPatch) -> None:
+    def fail(_location: str) -> NoReturn:
         raise ValueError("bad URL")
 
     monkeypatch.setattr("config_mate.urlparse", fail)
@@ -118,7 +122,7 @@ def test_url_detection_returns_false_when_parsing_fails(monkeypatch):
     assert ConfigMate()._is_valid_url("anything") is False
 
 
-def test_load_dict_resolves_internal_json_references_to_plain_values():
+def test_load_dict_resolves_internal_json_references_to_plain_values() -> None:
     source = {
         "definitions": {"defaults": {"retries": 3}},
         "service": {"$ref": "#/definitions/defaults"},
@@ -130,17 +134,19 @@ def test_load_dict_resolves_internal_json_references_to_plain_values():
     assert type(loaded["service"]) is dict
 
 
-def test_load_content_selects_handler_and_resolves_references():
+def test_load_content_selects_handler_and_resolves_references() -> None:
     loaded = ConfigMate().load_config_from_content(
         '{"definitions": {"port": 8080}, "port": {"$ref": "#/definitions/port"}}',
         ContentType.JSON,
         base_uri="https://example.test/config.json",
     )
 
-    assert loaded["port"] == 8080
+    assert isinstance(loaded, Mapping)
+    expected_port = 8080
+    assert loaded["port"] == expected_port
 
 
-def test_resolved_references_are_dumped_to_yaml_without_anchors_or_aliases():
+def test_resolved_references_are_dumped_to_yaml_without_anchors_or_aliases() -> None:
     mate = ConfigMate()
     loaded = mate.load_config_from_content(
         """
@@ -160,10 +166,11 @@ services:
     rendered = output.getvalue()
     assert "&id" not in rendered
     assert "*id" not in rendered
-    assert rendered.count("retries: 3") == 3
+    expected_occurrences = 3
+    assert rendered.count("retries: 3") == expected_occurrences
 
 
-def test_empty_json_content_is_rejected():
+def test_empty_json_content_is_rejected() -> None:
     with pytest.raises(ValueError, match="application/json content is empty"):
         ConfigMate().load_config_from_content("null", ContentType.JSON)
 
@@ -176,20 +183,26 @@ def test_empty_json_content_is_rejected():
     ],
 )
 def test_load_url_uses_response_content_type_or_yaml_default(
-    body, content_type, expected
-):
+    body: bytes,
+    content_type: str | None,
+    expected: Mapping[str, object],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     mate = ConfigMate()
     response = StubResponse(body, content_type)
-    mate.session.get = Mock(return_value=response)
+    get_response = Mock(return_value=response)
+    monkeypatch.setattr(mate.session, "get", get_response)
 
     loaded = mate.load_config_from_location("https://example.test/config")
 
     assert loaded == expected
-    mate.session.get.assert_called_once_with("https://example.test/config", stream=True)
+    get_response.assert_called_once_with("https://example.test/config", stream=True)
     response.raise_for_status.assert_called_once_with()
 
 
-def test_external_yaml_references_resolve_to_documents_not_document_arrays():
+def test_external_yaml_references_resolve_to_documents_not_document_arrays(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     mate = ConfigMate()
     referenced_documents = {
         "https://example.test/stage-in.cwl": b"class: CommandLineTool\nid: stage-in\n",
@@ -197,11 +210,11 @@ def test_external_yaml_references_resolve_to_documents_not_document_arrays():
         "https://example.test/stage-out.cwl": b"class: CommandLineTool\nid: stage-out\n",
     }
 
-    def get(location, stream):
+    def get(location: str, stream: bool) -> StubResponse:
         assert stream is True
         return StubResponse(referenced_documents[location], "text/plain")
 
-    mate.session.get = Mock(side_effect=get)
+    monkeypatch.setattr(mate.session, "get", Mock(side_effect=get))
 
     loaded = mate.load_config_from_content(
         """
@@ -215,6 +228,7 @@ workflows:
 """
     )
 
+    assert isinstance(loaded, Mapping)
     assert loaded["workflows"] == {
         "directory_stage_in": {"class": "CommandLineTool", "id": "stage-in"},
         "workflow": {"class": "Workflow", "id": "workflow"},
@@ -222,40 +236,42 @@ workflows:
     }
 
 
-def test_load_url_decompresses_gzip_content():
+def test_load_url_decompresses_gzip_content(monkeypatch: pytest.MonkeyPatch) -> None:
     mate = ConfigMate()
     response = StubResponse(
         gzip.compress(b'{"compressed": true}'),
         "application/json",
     )
-    mate.session.get = Mock(return_value=response)
+    get_response = Mock(return_value=response)
+    monkeypatch.setattr(mate.session, "get", get_response)
 
-    assert mate.load_config_from_location("https://example.test/config.gz") == {
-        "compressed": True
-    }
+    assert mate.load_config_from_location("https://example.test/config.gz") == {"compressed": True}
 
 
-def test_load_url_rejects_unknown_content_type():
+def test_load_url_rejects_unknown_content_type(monkeypatch: pytest.MonkeyPatch) -> None:
     mate = ConfigMate()
-    mate.session.get = Mock(
-        return_value=StubResponse(b"value", "application/octet-stream")
+    monkeypatch.setattr(
+        mate.session, "get", Mock(return_value=StubResponse(b"value", "application/octet-stream"))
     )
 
     with pytest.raises(ValueError, match="application/octet-stream"):
         mate.load_config_from_location("https://example.test/config")
 
 
-def test_local_file_is_converted_to_file_url(tmp_path, monkeypatch):
+def test_local_file_is_converted_to_file_url(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     config_file = tmp_path / "config.yaml"
     config_file.write_text("name: local\n")
     mate = ConfigMate()
     original_load = mate.load_config_from_location
     delegated = Mock(return_value={"loaded": True})
 
-    def dispatch(location):
+    def dispatch(location: str) -> Mapping[str, object] | list[Mapping[str, object]]:
         if location == str(config_file):
             return original_load(location)
-        return delegated(location)
+        result: Mapping[str, object] = delegated(location)
+        return result
 
     monkeypatch.setattr(mate, "load_config_from_location", dispatch)
 
@@ -263,7 +279,7 @@ def test_local_file_is_converted_to_file_url(tmp_path, monkeypatch):
     delegated.assert_called_once_with(config_file.resolve().as_uri())
 
 
-def test_missing_local_file_is_rejected(tmp_path):
+def test_missing_local_file_is_rejected(tmp_path: Path) -> None:
     missing = tmp_path / "missing.yaml"
 
     with pytest.raises(ValueError, match="resource does not exist"):

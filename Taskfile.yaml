@@ -22,6 +22,10 @@ includes:
 
 tasks:
 
+  default:
+    cmds:
+    - task: quality:pre-commit:run
+
   build_playground_dev:
     internal: true
     desc: Build the playground container

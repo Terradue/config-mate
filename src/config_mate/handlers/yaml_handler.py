@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+"""Read and write YAML configurations without aliases."""
 
 from collections.abc import Mapping
 from typing import Any, TextIO
@@ -24,6 +23,8 @@ from . import StreamHandler
 
 
 class YamlHandler(StreamHandler):
+    """Read and write configuration documents through text streams."""
+
     @staticmethod
     def _create_yaml() -> YAML:
         yaml = YAML(typ="safe")
@@ -32,8 +33,9 @@ class YamlHandler(StreamHandler):
         yaml.representer.sort_base_mapping_type_on_output = False
         return yaml
 
-    def handle(self, stream: TextIO) -> Mapping[str, Any] | list[Mapping[str, Any]]:
-        documents = list(self._create_yaml().load_all(stream))
+    def handle(self, stream: TextIO) -> Mapping[str, Any] | list[Mapping[str, Any]] | None:
+        """Read configuration documents, returning None for a null document."""
+        documents: list[Mapping[str, Any]] = list(self._create_yaml().load_all(stream))
 
         if len(documents) == 1:
             return documents[0]
@@ -42,7 +44,8 @@ class YamlHandler(StreamHandler):
 
     def write(
         self, configuration: Mapping[str, Any] | list[Mapping[str, Any]], stream: TextIO
-    ):
+    ) -> None:
+        """Write configuration documents to the supplied text stream."""
         yaml = self._create_yaml()
         if isinstance(configuration, list):
             yaml.dump_all(configuration, stream)

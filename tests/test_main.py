@@ -15,43 +15,58 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
+from collections.abc import Callable, Mapping
+from pathlib import Path
+from typing import ClassVar, TextIO, TypeAlias
+
 import pytest
+from click import UsageError
 from click.testing import CliRunner
 from session_adapters.http_conts import ContentType
 
 from config_mate.main import main
 
+Adapter: TypeAlias = tuple[str, tuple[object, ...], dict[str, object]]
+
 
 class FakeConfigMate:
-    instances: list["FakeConfigMate"] = []
+    """Record CLI transport registration and configuration rendering."""
 
-    def __init__(self):
-        self.mounts = []
-        self.loaded_from = None
-        self.dumped = None
+    instances: ClassVar[list["FakeConfigMate"]] = []
+
+    def __init__(self) -> None:
+        self.mounts: list[tuple[str, Adapter]] = []
+        self.loaded_from: str | None = None
+        self.dumped: tuple[Mapping[str, object], ContentType] | None = None
         self.__class__.instances.append(self)
 
-    def mount_session(self, scheme, adapter):
+    def mount_session(self, scheme: str, adapter: Adapter) -> None:
+        """Record the transport mounted for a URL prefix."""
         self.mounts.append((scheme, adapter))
 
-    def load_config_from_location(self, location):
+    def load_config_from_location(self, location: str) -> Mapping[str, object]:
+        """Record the input location and return a sample configuration."""
         self.loaded_from = location
         return {"loaded": location}
 
-    def dump_config(self, configuration, stream, content_type):
+    def dump_config(
+        self, configuration: Mapping[str, object], stream: TextIO, content_type: ContentType
+    ) -> None:
+        """Record the output format and write sample output."""
         self.dumped = (configuration, content_type)
         stream.write("rendered")
 
 
 @pytest.fixture
-def cli_dependencies(monkeypatch):
+def cli_dependencies(monkeypatch: pytest.MonkeyPatch) -> dict[str, Adapter]:
+    """Replace network adapters and configuration loading with recording fakes."""
     import config_mate.main as main_module
 
     FakeConfigMate.instances.clear()
-    adapters = {}
+    adapters: dict[str, Adapter] = {}
 
-    def adapter_factory(name):
-        def create(*args, **kwargs):
+    def adapter_factory(name: str) -> Callable[..., Adapter]:
+        def create(*args: object, **kwargs: object) -> Adapter:
             adapter = (name, args, kwargs)
             adapters[name] = adapter
             return adapter
@@ -71,7 +86,9 @@ def cli_dependencies(monkeypatch):
     return adapters
 
 
-def test_cli_renders_to_stdout_and_mounts_default_adapters(cli_dependencies):
+def test_cli_renders_to_stdout_and_mounts_default_adapters(
+    cli_dependencies: dict[str, Adapter],
+) -> None:
     result = CliRunner().invoke(main, ["config.yaml", "--ext", "json"])
 
     assert result.exit_code == 0
@@ -90,7 +107,7 @@ def test_cli_renders_to_stdout_and_mounts_default_adapters(cli_dependencies):
     assert mate.mounts[0][1][0] == "HTTPAdapter"
 
 
-def test_cli_uses_yaml_output_by_default(cli_dependencies):
+def test_cli_uses_yaml_output_by_default(cli_dependencies: dict[str, Adapter]) -> None:
     result = CliRunner().invoke(main, ["config.yaml"])
 
     assert result.exit_code == 0
@@ -100,7 +117,9 @@ def test_cli_uses_yaml_output_by_default(cli_dependencies):
     )
 
 
-def test_cli_writes_output_and_configures_credentials(tmp_path, cli_dependencies):
+def test_cli_writes_output_and_configures_credentials(
+    tmp_path: Path, cli_dependencies: dict[str, Adapter]
+) -> None:
     output = tmp_path / "nested" / "config.xml"
     result = CliRunner().invoke(
         main,
@@ -134,13 +153,14 @@ def test_cli_writes_output_and_configures_credentials(tmp_path, cli_dependencies
     }
 
 
-def test_cli_rejects_an_invalid_extension():
+def test_cli_rejects_an_invalid_extension() -> None:
     result = CliRunner().invoke(main, ["config.yaml", "--ext", "toml"])
 
-    assert result.exit_code == 2
+    assert result.exit_code == UsageError.exit_code
     assert "Invalid value for '--ext'" in result.output
 
 
-def test_command_callback_defensively_rejects_unsupported_extension():
+def test_command_callback_defensively_rejects_unsupported_extension() -> None:
+    assert main.callback is not None
     with pytest.raises(ValueError, match="'toml' not supported"):
-        main.callback("config.yaml", "toml")
+        main.callback("config.yaml", ext="toml")
