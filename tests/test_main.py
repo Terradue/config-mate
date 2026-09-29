@@ -15,6 +15,7 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
+import importlib.util
 import json
 import sys
 from base64 import b64decode, b64encode
@@ -75,6 +76,13 @@ def cli_dependencies(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict[st
         monkeypatch.delenv(variable, raising=False)
     monkeypatch.setenv("XDG_RUNTIME_DIR", str(tmp_path / "runtime"))
     monkeypatch.setattr(Path, "home", lambda: tmp_path / "home")
+    # Import under the isolated environment so Click captures a safe default path.
+    spec = importlib.util.spec_from_file_location("ref_bundle.main", main_module.__file__)
+    assert spec is not None and spec.loader is not None
+    isolated_main = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(isolated_main)
+    monkeypatch.setattr(sys.modules[__name__], "main_module", isolated_main)
+    monkeypatch.setattr(sys.modules[__name__], "main", isolated_main.main)
     FakeConfigMate.instances.clear()
     adapters: dict[str, Adapter] = {}
 
@@ -230,7 +238,6 @@ def test_cli_loads_authfile_with_option_environment_default_precedence(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    # The command has already been imported, so this also checks lazy defaults.
     default_authfile = main_module._default_authfile()
     environment_authfile = tmp_path / "environment.json"
     option_authfile = tmp_path / "option.json"
@@ -254,6 +261,37 @@ def test_cli_loads_authfile_with_option_environment_default_precedence(
     assert isinstance(containers_auth, ContainersAuth)
     assert containers_auth.auths is not None
     assert set(containers_auth.auths) == {f"{source}.test"}
+
+
+def test_cli_help_shows_resolved_authfile_default(
+    cli_dependencies: dict[str, Adapter],
+) -> None:
+    default_authfile = main_module._default_authfile()
+
+    result = CliRunner().invoke(main, ["--help"], terminal_width=300)
+
+    assert result.exit_code == 0
+    assert f"default: {default_authfile}]" in result.output
+
+
+def test_cli_keeps_authfile_default_resolved_at_import(
+    cli_dependencies: dict[str, Adapter],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    default_authfile = main_module._default_authfile()
+    default_authfile.parent.mkdir(parents=True, exist_ok=True)
+    default_authfile.write_text(json.dumps({"auths": {"default.test": {"auth": "dXNlcjpwYXNz"}}}))
+    monkeypatch.setenv("XDG_RUNTIME_DIR", str(tmp_path / "changed-runtime"))
+    monkeypatch.setattr(Path, "home", lambda: tmp_path / "changed-home")
+
+    result = CliRunner().invoke(main, ["config.yaml"])
+
+    assert result.exit_code == 0, result.output
+    containers_auth = cli_dependencies["OCIAdapter"][1][0]
+    assert isinstance(containers_auth, ContainersAuth)
+    assert containers_auth.auths is not None
+    assert set(containers_auth.auths) == {"default.test"}
 
 
 @pytest.mark.parametrize("authfile_option", [True, False])

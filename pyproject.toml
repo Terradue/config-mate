@@ -98,7 +98,7 @@ packages = ["src/ref_bundle"]
 # ---------------------------------------------------------------------------
 
 [tool.coverage.run]
-source_pkgs = ["ref_bundle/api", "tests"]
+source_pkgs = ["ref_bundle"]
 branch = true
 parallel = true
 omit = [
@@ -106,9 +106,9 @@ omit = [
 ]
 
 [tool.coverage.paths]
-ref_bundle_api = [
-  "src/ref_bundle/api",
-  "*/transpiler-mate-api/src/ref_bundle/api"
+ref_bundle = [
+  "src/ref_bundle",
+  "*/ref-bundle/src/ref_bundle"
 ]
 
 [tool.coverage.report]
@@ -136,7 +136,7 @@ dependencies = [
 [tool.hatch.envs.test.scripts]
 test = "pytest {args:tests}"
 testv = "pytest --verbose {args:tests}"
-test-cov = "pytest --cov=ref_bundle/api --cov-report=term-missing --cov-report=xml:coverage.xml {args:tests}"
+test-cov = "pytest --cov --cov-report=term-missing --cov-report=xml:coverage.xml {args:tests}"
 test-show-setup = "pytest --setup-show {args:tests}"
 
 [[tool.hatch.envs.test.matrix]]
