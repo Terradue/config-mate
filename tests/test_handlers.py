@@ -125,3 +125,8 @@ def test_xml_handler_writes_configuration_document() -> None:
     assert XmlHandler().handle(StringIO(rendered)) == {
         "configuration": {"service": {"name": "api"}}
     }
+
+
+@pytest.mark.parametrize("handler", [JsonHandler(), YamlHandler()])
+def test_handlers_return_none_for_null_documents(handler: JsonHandler | YamlHandler) -> None:
+    assert handler.handle(StringIO("null")) is None

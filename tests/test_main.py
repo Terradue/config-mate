@@ -15,6 +15,9 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
+import json
+import sys
+from base64 import b64decode, b64encode
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import ClassVar, TextIO, TypeAlias
@@ -22,8 +25,10 @@ from typing import ClassVar, TextIO, TypeAlias
 import pytest
 from click import UsageError
 from click.testing import CliRunner
+from session_adapters.conainers_auth import ContainersAuth
 from session_adapters.http_conts import ContentType
 
+import config_mate.main as main_module
 from config_mate.main import main
 
 Adapter: TypeAlias = tuple[str, tuple[object, ...], dict[str, object]]
@@ -58,10 +63,18 @@ class FakeConfigMate:
 
 
 @pytest.fixture
-def cli_dependencies(monkeypatch: pytest.MonkeyPatch) -> dict[str, Adapter]:
+def cli_dependencies(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict[str, Adapter]:
     """Replace network adapters and configuration loading with recording fakes."""
-    import config_mate.main as main_module
-
+    for variable in (
+        "OCI_HOSTNAME",
+        "OCI_USERNAME",
+        "OCI_PASSWORD",
+        "OAUTH2_BEARER",
+        "REGISTRY_AUTH_FILE",
+    ):
+        monkeypatch.delenv(variable, raising=False)
+    monkeypatch.setenv("XDG_RUNTIME_DIR", str(tmp_path / "runtime"))
+    monkeypatch.setattr(Path, "home", lambda: tmp_path / "home")
     FakeConfigMate.instances.clear()
     adapters: dict[str, Adapter] = {}
 
@@ -146,11 +159,13 @@ def test_cli_writes_output_and_configures_credentials(
     mate = FakeConfigMate.instances[0]
     assert mate.dumped == ({"loaded": "remote.yaml"}, ContentType.XML)
     assert cli_dependencies["BearerAuthHTTPAdapter"][1] == ("token",)
-    assert cli_dependencies["OCIAdapter"][2] == {
-        "hostname": "registry.test",
-        "username": "user",
-        "password": "secret",
-    }
+    containers_auth = cli_dependencies["OCIAdapter"][1][0]
+    assert isinstance(containers_auth, ContainersAuth)
+    assert containers_auth.auths is not None
+    encoded_auth = containers_auth.auths["registry.test"].auth
+    assert encoded_auth is not None
+    assert b64decode(encoded_auth).decode() == "user:secret"
+    assert cli_dependencies["OCIAdapter"][2] == {}
 
 
 def test_cli_rejects_an_invalid_extension() -> None:
@@ -163,4 +178,188 @@ def test_cli_rejects_an_invalid_extension() -> None:
 def test_command_callback_defensively_rejects_unsupported_extension() -> None:
     assert main.callback is not None
     with pytest.raises(ValueError, match="'toml' not supported"):
-        main.callback("config.yaml", ext="toml")
+        main.callback("config.yaml", ext="toml", authfile=None)
+
+
+def test_cli_exits_with_failure_when_loading_fails(
+    cli_dependencies: dict[str, Adapter],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def fail_loading(self: FakeConfigMate, location: str) -> Mapping[str, object]:
+        raise ValueError("Configuration could not be loaded")
+
+    monkeypatch.setattr(FakeConfigMate, "load_config_from_location", fail_loading)
+    result = CliRunner().invoke(main, ["config.yaml"])
+
+    assert result.exit_code == 1
+    assert result.stdout == ""
+    assert FakeConfigMate.instances[0].dumped is None
+
+
+@pytest.mark.parametrize(
+    ("platform", "runtime_dir", "relative_path"),
+    [
+        ("linux", "runtime", "runtime/containers/auth.json"),
+        ("linux", None, "home/.config/containers/auth.json"),
+        ("linux", "", "home/.config/containers/auth.json"),
+        ("darwin", "runtime", "home/.config/containers/auth.json"),
+        ("win32", "runtime", "home/.config/containers/auth.json"),
+    ],
+)
+def test_default_authfile_selects_platform_path(
+    platform: str,
+    runtime_dir: str | None,
+    relative_path: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(sys, "platform", platform)
+    monkeypatch.setattr(Path, "home", lambda: tmp_path / "home")
+    if runtime_dir is None:
+        monkeypatch.delenv("XDG_RUNTIME_DIR", raising=False)
+    else:
+        monkeypatch.setenv("XDG_RUNTIME_DIR", str(tmp_path / runtime_dir) if runtime_dir else "")
+
+    assert main_module._default_authfile() == tmp_path / relative_path
+
+
+@pytest.mark.parametrize("source", ["option", "environment", "default"])
+def test_cli_loads_authfile_with_option_environment_default_precedence(
+    source: str,
+    cli_dependencies: dict[str, Adapter],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # The command has already been imported, so this also checks lazy defaults.
+    default_authfile = main_module._default_authfile()
+    environment_authfile = tmp_path / "environment.json"
+    option_authfile = tmp_path / "option.json"
+    for authfile, registry in (
+        (default_authfile, "default.test"),
+        (environment_authfile, "environment.test"),
+        (option_authfile, "option.test"),
+    ):
+        authfile.parent.mkdir(parents=True, exist_ok=True)
+        authfile.write_text(json.dumps({"auths": {registry: {"auth": "dXNlcjpwYXNz"}}}))
+    arguments = ["config.yaml"]
+    if source in ("option", "environment"):
+        monkeypatch.setenv("REGISTRY_AUTH_FILE", str(environment_authfile))
+    if source == "option":
+        arguments.extend(["--authfile", str(option_authfile)])
+
+    result = CliRunner().invoke(main, arguments)
+
+    assert result.exit_code == 0, result.output
+    containers_auth = cli_dependencies["OCIAdapter"][1][0]
+    assert isinstance(containers_auth, ContainersAuth)
+    assert containers_auth.auths is not None
+    assert set(containers_auth.auths) == {f"{source}.test"}
+
+
+@pytest.mark.parametrize("authfile_option", [True, False])
+def test_cli_uses_empty_auth_when_authfile_is_missing(
+    authfile_option: bool,
+    cli_dependencies: dict[str, Adapter],
+    tmp_path: Path,
+) -> None:
+    arguments = ["config.yaml"]
+    if authfile_option:
+        arguments.extend(["--authfile", str(tmp_path / "missing.json")])
+
+    result = CliRunner().invoke(main, arguments)
+
+    assert result.exit_code == 0
+    containers_auth = cli_dependencies["OCIAdapter"][1][0]
+    assert isinstance(containers_auth, ContainersAuth)
+    assert containers_auth.auths == {}
+
+
+@pytest.mark.parametrize(
+    "credentials",
+    [
+        [],
+        ["--oci-hostname", "registry.test"],
+        ["--oci-hostname", "registry.test", "--oci-username", "new-user"],
+        ["--oci-username", "new-user", "--oci-password", "new-password"],
+        ["--oci-hostname", "registry.test", "--oci-password", "new-password"],
+    ],
+)
+def test_cli_preserves_file_credentials_when_explicit_credentials_are_incomplete(
+    credentials: list[str],
+    cli_dependencies: dict[str, Adapter],
+    tmp_path: Path,
+) -> None:
+    authfile = tmp_path / "auth.json"
+    source = {"auths": {"registry.test": {"auth": "dXNlcjpwYXNz"}}}
+    authfile.write_text(json.dumps(source))
+
+    result = CliRunner().invoke(main, ["config.yaml", "--authfile", str(authfile), *credentials])
+
+    assert result.exit_code == 0
+    containers_auth = cli_dependencies["OCIAdapter"][1][0]
+    assert isinstance(containers_auth, ContainersAuth)
+    assert containers_auth.model_dump(exclude_none=True, by_alias=True) == source
+
+
+def test_cli_overrides_one_registry_preserving_other_credentials_helpers_and_file(
+    cli_dependencies: dict[str, Adapter],
+    tmp_path: Path,
+) -> None:
+    authfile = tmp_path / "auth.json"
+    auths = {
+        "registry.test": {"auth": "b2xkOnBhc3M="},
+        "other.test": {"auth": "b3RoZXI6cGFzcw=="},
+    }
+    source = {
+        "auths": auths,
+        "credHelpers": {"helper.test": "example-helper"},
+    }
+    original_content = json.dumps(source)
+    authfile.write_text(original_content)
+
+    result = CliRunner().invoke(
+        main,
+        [
+            "config.yaml",
+            "--authfile",
+            str(authfile),
+            "--oci-hostname",
+            "registry.test",
+            "--oci-username",
+            "new-user",
+            "--oci-password",
+            "new:password",
+        ],
+    )
+
+    assert result.exit_code == 0
+    containers_auth = cli_dependencies["OCIAdapter"][1][0]
+    assert isinstance(containers_auth, ContainersAuth)
+    auths["registry.test"] = {"auth": b64encode(b"new-user:new:password").decode()}
+    assert containers_auth.model_dump(exclude_none=True, by_alias=True) == source
+    assert authfile.read_text() == original_content
+
+
+def test_cli_rejects_invalid_authfile_before_constructing_oci_adapter(
+    cli_dependencies: dict[str, Adapter],
+    tmp_path: Path,
+) -> None:
+    authfile = tmp_path / "auth.json"
+    authfile.write_text("{invalid")
+
+    result = CliRunner().invoke(main, ["config.yaml", "--authfile", str(authfile)])
+
+    assert result.exit_code == 1
+    assert result.exception is not None
+    assert "OCIAdapter" not in cli_dependencies
+    assert FakeConfigMate.instances[0].loaded_from is None
+
+
+def test_command_callback_accepts_absent_authfile(cli_dependencies: dict[str, Adapter]) -> None:
+    assert main.callback is not None
+
+    main.callback("config.yaml", ext="yaml", authfile=None)
+
+    containers_auth = cli_dependencies["OCIAdapter"][1][0]
+    assert isinstance(containers_auth, ContainersAuth)
+    assert containers_auth.auths == {}

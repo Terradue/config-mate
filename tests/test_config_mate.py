@@ -284,3 +284,9 @@ def test_missing_local_file_is_rejected(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="resource does not exist"):
         ConfigMate().load_config_from_location(str(missing))
+
+
+@pytest.mark.parametrize("value", [42, ["item"]])
+def test_load_dict_rejects_references_resolving_to_non_mapping_roots(value: object) -> None:
+    with pytest.raises(ValueError, match="Resolved configuration must be a mapping"):
+        ConfigMate().load_config_from_dict({"$ref": "#/value", "value": value})

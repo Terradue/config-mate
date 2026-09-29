@@ -26,8 +26,8 @@ from . import StreamHandler
 class XmlHandler(StreamHandler):
     """Read and write configuration documents through text streams."""
 
-    def handle(self, stream: TextIO) -> Mapping[str, Any] | list[Mapping[str, Any]] | None:
-        """Read configuration documents, returning None for a null document."""
+    def handle(self, stream: TextIO) -> Mapping[str, Any]:
+        """Parse an XML document with namespace processing enabled."""
         return xmltodict.parse(stream.read(), encoding=DEFAULT_ENCODING, process_namespaces=True)
 
     def write(
