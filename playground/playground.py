@@ -22,7 +22,7 @@ import streamlit as st
 import json
 import os
 
-st.header("Config Mate playground")
+st.header("Ref Bundle playground")
 st.set_page_config(layout="wide")
 
 btn_settings_editor_btns = [

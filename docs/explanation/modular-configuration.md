@@ -6,7 +6,7 @@ environment-specific values. When they live in one document, repetition hides
 which settings are intentional and makes a change difficult to propagate
 safely.
 
-Config Mate supports a source-and-artifact model:
+Ref Bundle supports a source-and-artifact model:
 
 ```text
 small root documents ─┐
@@ -74,7 +74,7 @@ the configuration's supply chain.
 
 Use authenticated transports where needed, restrict references to trusted
 locations, and avoid putting credentials in source documents. Review the
-collected artifact when adopting a new remote component. Config Mate resolves
+collected artifact when adopting a new remote component. Ref Bundle resolves
 content; it does not establish that the content is trustworthy or valid for a
 particular application.
 

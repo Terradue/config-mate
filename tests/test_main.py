@@ -35,10 +35,10 @@ from ref_bundle.main import main
 Adapter: TypeAlias = tuple[str, tuple[object, ...], dict[str, object]]
 
 
-class FakeConfigMate:
+class FakeRefBundle:
     """Record CLI transport registration and configuration rendering."""
 
-    instances: ClassVar[list["FakeConfigMate"]] = []
+    instances: ClassVar[list["FakeRefBundle"]] = []
 
     def __init__(self) -> None:
         self.mounts: list[tuple[str, Adapter]] = []
@@ -83,7 +83,7 @@ def cli_dependencies(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict[st
     spec.loader.exec_module(isolated_main)
     monkeypatch.setattr(sys.modules[__name__], "main_module", isolated_main)
     monkeypatch.setattr(sys.modules[__name__], "main", isolated_main.main)
-    FakeConfigMate.instances.clear()
+    FakeRefBundle.instances.clear()
     adapters: dict[str, Adapter] = {}
 
     def adapter_factory(name: str) -> Callable[..., Adapter]:
@@ -94,7 +94,7 @@ def cli_dependencies(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> dict[st
 
         return create
 
-    monkeypatch.setattr(main_module, "RefBundle", FakeConfigMate)
+    monkeypatch.setattr(main_module, "RefBundle", FakeRefBundle)
     for name in (
         "HTTPAdapter",
         "BearerAuthHTTPAdapter",
@@ -114,7 +114,7 @@ def test_cli_renders_to_stdout_and_mounts_default_adapters(
 
     assert result.exit_code == 0
     assert result.stdout == "rendered"
-    mate = FakeConfigMate.instances[0]
+    mate = FakeRefBundle.instances[0]
     assert mate.loaded_from == "config.yaml"
     assert mate.dumped == ({"loaded": "config.yaml"}, ContentType.JSON)
     assert [scheme for scheme, _adapter in mate.mounts] == [
@@ -132,7 +132,7 @@ def test_cli_uses_yaml_output_by_default(cli_dependencies: dict[str, Adapter]) -
     result = CliRunner().invoke(main, ["config.yaml"])
 
     assert result.exit_code == 0
-    assert FakeConfigMate.instances[0].dumped == (
+    assert FakeRefBundle.instances[0].dumped == (
         {"loaded": "config.yaml"},
         ContentType.YAML,
     )
@@ -164,7 +164,7 @@ def test_cli_writes_output_and_configures_credentials(
     assert result.exit_code == 0
     assert result.stdout == ""
     assert output.read_text() == "rendered"
-    mate = FakeConfigMate.instances[0]
+    mate = FakeRefBundle.instances[0]
     assert mate.dumped == ({"loaded": "remote.yaml"}, ContentType.XML)
     assert cli_dependencies["BearerAuthHTTPAdapter"][1] == ("token",)
     containers_auth = cli_dependencies["OCIAdapter"][1][0]
@@ -193,15 +193,15 @@ def test_cli_exits_with_failure_when_loading_fails(
     cli_dependencies: dict[str, Adapter],
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def fail_loading(self: FakeConfigMate, location: str) -> Mapping[str, object]:
+    def fail_loading(self: FakeRefBundle, location: str) -> Mapping[str, object]:
         raise ValueError("Configuration could not be loaded")
 
-    monkeypatch.setattr(FakeConfigMate, "load_config_from_location", fail_loading)
+    monkeypatch.setattr(FakeRefBundle, "load_config_from_location", fail_loading)
     result = CliRunner().invoke(main, ["config.yaml"])
 
     assert result.exit_code == 1
     assert result.stdout == ""
-    assert FakeConfigMate.instances[0].dumped is None
+    assert FakeRefBundle.instances[0].dumped is None
 
 
 @pytest.mark.parametrize(
@@ -390,7 +390,7 @@ def test_cli_rejects_invalid_authfile_before_constructing_oci_adapter(
     assert result.exit_code == 1
     assert result.exception is not None
     assert "OCIAdapter" not in cli_dependencies
-    assert FakeConfigMate.instances[0].loaded_from is None
+    assert FakeRefBundle.instances[0].loaded_from is None
 
 
 def test_command_callback_accepts_absent_authfile(cli_dependencies: dict[str, Adapter]) -> None:

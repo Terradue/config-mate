@@ -1,6 +1,6 @@
-# Config Mate
+# Ref Bundle
 
-Config Mate turns a modular JSON, YAML, or XML configuration into a
+Ref Bundle turns a modular JSON, YAML, or XML configuration into a
 self-contained document. It starts from one root document, follows its JSON
 References (`$ref`), and serializes the collected result as JSON, YAML, or XML.
 
@@ -22,7 +22,7 @@ The documentation is organized around the four
 | Understand why modular configuration matters | [Why modular configuration?](explanation/modular-configuration.md) |
 | Understand how the code is organized | [How the implementation is organized](explanation/implementation.md) |
 
-## What Config Mate does
+## What Ref Bundle does
 
 Given a root document like this:
 
@@ -33,7 +33,7 @@ service:
     $ref: components/runtimes.yaml#/python
 ```
 
-Config Mate fetches `components/runtimes.yaml`, selects the `python` value,
+Ref Bundle fetches `components/runtimes.yaml`, selects the `python` value,
 recursively resolves any references inside it, and replaces the `$ref` object
 with the selected value. The output is a plain, portable document.
 

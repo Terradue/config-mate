@@ -69,7 +69,7 @@ the CLI:
 | OCI | `oci://registry.example.org/team/root.yaml` | Uses the OCI options or their environment-variable equivalents. |
 
 Input may be YAML, JSON, or XML. For remote inputs, the response
-`Content-Type` selects the parser; when that header is absent, Config Mate
+`Content-Type` selects the parser; when that header is absent, Ref Bundle
 assumes YAML. Gzip-compressed response bodies are detected and decompressed.
 
 See the [`$ref` reference](json-reference.md) for fragments and relative

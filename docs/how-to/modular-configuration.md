@@ -106,7 +106,7 @@ The command exits non-zero if a source cannot be loaded or parsed, a
 reference cannot be resolved, or the result cannot be written. This catches
 broken paths and pointers before deployment. Validate the collected artifact
 with the downstream system's own schema or validation command as a separate
-step; Config Mate resolves references but does not enforce an
+step; Ref Bundle resolves references but does not enforce an
 application-specific schema.
 
 Do not edit files under `build/`. Regenerate them from the modular sources so

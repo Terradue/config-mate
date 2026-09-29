@@ -1,6 +1,6 @@
 # Use the playground
 
-The Config Mate playground is a Streamlit application for experimenting with
+The Ref Bundle playground is a Streamlit application for experimenting with
 YAML and seeing its fully resolved form immediately. It is useful for learning
 `$ref`, reviewing a configuration fragment, and diagnosing a reference before
 adding it to a root document.
@@ -34,7 +34,7 @@ To build the playground from the current checkout and run it:
 task run_playground_dev
 ```
 
-This is the most representative option when changing Config Mate or the
+This is the most representative option when changing Ref Bundle or the
 playground itself.
 
 ## Run the application directly

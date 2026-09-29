@@ -1,7 +1,7 @@
 # How the implementation is organized
 
-Config Mate separates configuration transport, serialization, and reference
-resolution. The `ConfigMate` class coordinates these responsibilities without
+Ref Bundle separates configuration transport, serialization, and reference
+resolution. The `RefBundle` class coordinates these responsibilities without
 embedding the details of every URI scheme or document format.
 
 ## Package layout
@@ -19,7 +19,7 @@ src/ref_bundle/
     └── yaml_handler.py
 ```
 
-- `ref_bundle.__init__` defines the `ConfigMate` facade and the load,
+- `ref_bundle.__init__` defines the `RefBundle` facade and the load,
   resolution, and dump pipeline.
 - `ref_bundle.main` defines the Click command, configures transport adapters,
   and directs output to a file or standard output.
@@ -29,22 +29,22 @@ src/ref_bundle/
   transport adapters used by the CLI.
 - `jsonref` performs recursive JSON Reference resolution.
 
-The playground is a separate Streamlit consumer of the public `ConfigMate`
+The playground is a separate Streamlit consumer of the public `RefBundle`
 API. It is not part of the loading core.
 
 ## Class diagram
 
-The diagram shows the core collaboration points. `ConfigMate` owns the
+The diagram shows the core collaboration points. `RefBundle` owns the
 requests session and handler registry, delegates resource access to session
 adapters, delegates parsing and writing to stream handlers, and invokes
 `jsonref` for `$ref` replacement.
 
-[![Config Mate class diagram](../diagrams/class_diagram.svg)](../diagrams/class_diagram.svg)
+[![Ref Bundle class diagram](../diagrams/class_diagram.svg)](../diagrams/class_diagram.svg)
 
 The generated SVG is based on the [PlantUML
 source](../diagrams/src/class_diagram.puml). The diagram focuses on
 architectural relationships; external library classes are shown only where
-they connect to the Config Mate core.
+they connect to the Ref Bundle core.
 
 ## The loading pipeline
 
@@ -76,7 +76,7 @@ selects a stream handler. Gzip response bodies are detected from their magic
 bytes and decompressed before parsing.
 
 The parsed value then reaches `load_config_from_dict()`, which calls
-`jsonref.replace_refs()`. Config Mate supplies `load_config_from_location()` as
+`jsonref.replace_refs()`. Ref Bundle supplies `load_config_from_location()` as
 the loader, allowing a reference discovered by `jsonref` to re-enter the same
 transport and parsing pipeline. This is what makes references recursive across
 different documents and schemes.
@@ -112,7 +112,7 @@ compatible `requests` adapter.
 - `handle()` parses a text stream into mappings; and
 - `write()` serializes mappings to a text stream.
 
-`ConfigMate` registers handlers by content type. Several MIME types can point
+`RefBundle` registers handlers by content type. Several MIME types can point
 to the same handler—for example, standard JSON and problem JSON use
 `JsonHandler`, while plain text is treated as YAML to support services that
 serve YAML without a specific YAML content type.
@@ -126,7 +126,7 @@ serialization strategy without changing the resolution pipeline.
 The CLI is a thin composition layer. It:
 
 1. translates `--ext` into an output content type;
-2. creates `ConfigMate`;
+2. creates `RefBundle`;
 3. mounts the standard transport adapters and credentials;
 4. loads and resolves the root location; and
 5. dumps the result to standard output or `--output`.
