@@ -23,6 +23,18 @@ local release tag.
 
 ### Security
 
+[1.1.0] - 2026-09-29
+
+### Added
+
+- dynamic resolution of the [authfile](https://man.archlinux.org/man/containers-auth.json.5) according to the requirements below:
+    - on Linux, the default is `${XDG_RUNTIME_DIR}/containers/auth.json`;
+    - the default value of this option is read from the `REGISTRY_AUTH_FILE` environment variable.
+
+### Changed
+
+- Improved type annotations and internal code quality by addressing mypy, Ruff, and Bandit findings, without changing public APIs or runtime behavior.
+
 [1.0.0] - 2026-07-30
 
 - First public version.
