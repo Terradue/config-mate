@@ -32,5 +32,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Improved type annotations and internal code quality by addressing mypy, Ruff, and Bandit findings, without changing public APIs or runtime behavior.
 
-[Unreleased]: https://github.com/Terradue/config-mate/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/Terradue/config-mate/releases/tag/v1.0.0
+[Unreleased]: https://github.com/Terradue/ref-bundle/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/Terradue/ref-bundle/releases/tag/v1.0.0

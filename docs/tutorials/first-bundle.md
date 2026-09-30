@@ -9,8 +9,8 @@ You need Python 3.10 or newer and access to the package registry that provides
 Ref Bundle. Install the package in a virtual environment:
 
 ```console
-python -m pip install config-mate
-config-mate --help
+python -m pip install ref-bundle
+ref-bundle --help
 ```
 
 ## 1. Create a reusable component
@@ -59,7 +59,7 @@ Your files now look like this:
 Run:
 
 ```console
-config-mate config.yaml
+ref-bundle config.yaml
 ```
 
 Because no output path or format was specified, Ref Bundle writes YAML to
@@ -84,7 +84,7 @@ services:
 Create a JSON bundle:
 
 ```console
-config-mate config.yaml --ext json --output build/config.json
+ref-bundle config.yaml --ext json --output build/config.json
 ```
 
 Ref Bundle creates the `build` directory if needed. `build/config.json` is a

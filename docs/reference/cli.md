@@ -1,19 +1,19 @@
 # CLI reference
 
-`config-mate` loads one root configuration, recursively resolves its `$ref`
+`ref-bundle` loads one root configuration, recursively resolves its `$ref`
 values, and serializes the collected document.
 
 ## Synopsis
 
 ```text
-config-mate [OPTIONS] CONFIG
+ref-bundle [OPTIONS] CONFIG
 ```
 
 ```console
-config-mate --help
-config-mate config.yaml
-config-mate config.yaml --output build/config.yaml
-config-mate config.yaml --ext json --output build/config.json
+ref-bundle --help
+ref-bundle config.yaml
+ref-bundle config.yaml --output build/config.yaml
+ref-bundle config.yaml --ext json --output build/config.json
 ```
 
 `CONFIG` is required. It can be a local path or a supported URI.
@@ -35,7 +35,7 @@ The output format is controlled by `--ext`, not by the extension in
 `--output`. For example, this command writes JSON despite the `.txt` suffix:
 
 ```console
-config-mate config.yaml --ext json --output build/config.txt
+ref-bundle config.yaml --ext json --output build/config.txt
 ```
 
 ## Standard output and logs
@@ -45,14 +45,14 @@ Operational logs are emitted separately, so the data can be redirected or
 piped:
 
 ```console
-config-mate config.yaml --ext json > build/config.json
+ref-bundle config.yaml --ext json > build/config.json
 ```
 
 Prefer `--output` when the command itself should create missing parent
 directories:
 
 ```console
-config-mate config.yaml --output build/nested/config.yaml
+ref-bundle config.yaml --output build/nested/config.yaml
 ```
 
 ## Supported input locations
@@ -82,7 +82,7 @@ resolution.
 Pass a token as an option:
 
 ```console
-config-mate https://config.example.org/root.yaml \
+ref-bundle https://config.example.org/root.yaml \
   --oauth2-bearer "$CONFIG_TOKEN"
 ```
 
@@ -90,7 +90,7 @@ Or expose it through the supported environment variable:
 
 ```console
 export OAUTH2_BEARER="$CONFIG_TOKEN"
-config-mate https://config.example.org/root.yaml
+ref-bundle https://config.example.org/root.yaml
 ```
 
 The same HTTP adapter is used when following HTTP or HTTPS references inside
@@ -101,7 +101,7 @@ the root document.
 Pass credentials directly:
 
 ```console
-config-mate oci://registry.example.org/team/root.yaml \
+ref-bundle oci://registry.example.org/team/root.yaml \
   --oci-hostname registry.example.org \
   --oci-username "$OCI_USER" \
   --oci-password "$OCI_PASS"
@@ -113,7 +113,7 @@ Or use environment variables:
 export OCI_HOSTNAME=registry.example.org
 export OCI_USERNAME="$OCI_USER"
 export OCI_PASSWORD="$OCI_PASS"
-config-mate oci://registry.example.org/team/root.yaml
+ref-bundle oci://registry.example.org/team/root.yaml
 ```
 
 Environment variables keep credentials out of shell history, but they are
@@ -126,14 +126,14 @@ The input and output formats are independent. A YAML root can be collected as
 JSON or XML:
 
 ```console
-config-mate config.yaml --ext json --output build/config.json
-config-mate config.yaml --ext xml --output build/config.xml
+ref-bundle config.yaml --ext json --output build/config.json
+ref-bundle config.yaml --ext xml --output build/config.xml
 ```
 
 YAML is the default:
 
 ```console
-config-mate config.json --output build/config.yaml
+ref-bundle config.json --output build/config.yaml
 ```
 
 ## Exit behavior

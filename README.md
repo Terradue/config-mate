@@ -1,16 +1,16 @@
 # Ref Bundle
 
-[![PyPI - Version](https://img.shields.io/pypi/v/config-mate.svg)](https://pypi.org/project/config-mate)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/config-mate.svg)](https://pypi.org/project/config-mate)
-[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/Terradue/config-mate/package.yaml?branch=develop&event=push&label=build&logo=githubactions)](https://github.com/Terradue/config-mate/actions/workflows/package.yaml?query=branch%3Adevelop)
-[![Code coverage](https://img.shields.io/codecov/c/github/Terradue/config-mate/develop?logo=codecov)](https://app.codecov.io/gh/Terradue/config-mate/tree/develop)
+[![PyPI - Version](https://img.shields.io/pypi/v/ref-bundle.svg)](https://pypi.org/project/ref-bundle)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/ref-bundle.svg)](https://pypi.org/project/ref-bundle)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/Terradue/ref-bundle/package.yaml?branch=develop&event=push&label=build&logo=githubactions)](https://github.com/Terradue/ref-bundle/actions/workflows/package.yaml?query=branch%3Adevelop)
+[![Code coverage](https://img.shields.io/codecov/c/github/Terradue/ref-bundle/develop?logo=codecov)](https://app.codecov.io/gh/Terradue/ref-bundle/tree/develop)
 
 Ref Bundle recursively resolves JSON References (`$ref`) across JSON, YAML,
 and XML configuration and writes one self-contained JSON, YAML, or XML
 artifact.
 
 ```bash
-config-mate config/root.yaml --output build/config.yaml
+ref-bundle config/root.yaml --output build/config.yaml
 ```
 
 Maintaining reusable policy, runtime profiles, workflows, and other generic
@@ -36,8 +36,8 @@ Ref Bundle requires Python 3.10 or newer. After configuring access to the
 package registry used by your organization:
 
 ```bash
-python -m pip install config-mate
-config-mate --help
+python -m pip install ref-bundle
+ref-bundle --help
 ```
 
 ### Hatch projects
@@ -52,7 +52,7 @@ PIP_EXTRA_INDEX_URL = "https://token:{env:TOKEN_PYPI_REGISTRY}@git.terradue.com/
 [tool.hatch.envs.prod]
 path = "/app/envs/my-hatch-env"
 dependencies = [
-  "config-mate",
+  "ref-bundle",
 ]
 ```
 
@@ -62,7 +62,7 @@ development environment, declare it under `[project]` instead:
 ```toml
 [project]
 dependencies = [
-  "config-mate",
+  "ref-bundle",
 ]
 ```
 
@@ -87,7 +87,7 @@ service:
 run:
 
 ```bash
-config-mate config.yaml --ext json --output build/config.json
+ref-bundle config.yaml --ext json --output build/config.json
 ```
 
 The output is a single JSON document with the referenced runtime inlined.

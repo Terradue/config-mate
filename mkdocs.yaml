@@ -1,8 +1,8 @@
 site_name: Ref Bundle
 # site_url: not available
 site_author: Fabrice Brito, Simone Tripodi
-repo_url: https://git.terradue.com/scoop/config-mate/
-repo_name: Terradue/config-mate
+repo_url: https://git.terradue.com/scoop/ref-bundle/
+repo_name: Terradue/ref-bundle
 
 theme:
   logo: imgs/icon-eoap.png
