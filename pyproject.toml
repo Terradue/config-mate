@@ -130,7 +130,7 @@ exclude_lines = [
 skip-install = false
 dependencies = [
   "pytest>=9.1.1,<10",
-  "pytest-cov>=6.2,<8",
+  "pytest-cov>=7.1.0,<8",
 ]
 
 [tool.hatch.envs.test.scripts]
@@ -322,5 +322,5 @@ check = [
 [project.optional-dependencies]
 test = [
   "pytest>=9.1.1,<10",
-  "pytest-cov>=6.2,<8"
+  "pytest-cov>=7.1.0,<8"
 ]
