@@ -98,7 +98,7 @@ component boundaries are too fine-grained.
 Bundle each root document in CI:
 
 ```console
-config-mate configuration/roots/production.yaml \
+ref-bundle configuration/roots/production.yaml \
   --output build/production.yaml
 ```
 

@@ -5,10 +5,6 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-This changelog was reconstructed from the git history and release tags available
-in this repository. The `0.16.0` entry covers the project history up to the first
-local release tag.
-
 ## [Unreleased]
 
 ### Added
@@ -23,7 +19,7 @@ local release tag.
 
 ### Security
 
-[1.0.0] - 2026-09-29
+## [1.0.0] - 2026-09-29
 
 ### Added
 
@@ -36,5 +32,5 @@ local release tag.
 
 - Improved type annotations and internal code quality by addressing mypy, Ruff, and Bandit findings, without changing public APIs or runtime behavior.
 
-[Unreleased]: https://github.com/Terradue/config-mate/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/Terradue/config-mate/releases/tag/v1.0.0
+[Unreleased]: https://github.com/Terradue/ref-bundle/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/Terradue/ref-bundle/releases/tag/v1.0.0
